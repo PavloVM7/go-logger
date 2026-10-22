@@ -1,3 +1,4 @@
+// Package slog provides custom handlers for the standard library's log/slog package.
 package slog
 
 import (

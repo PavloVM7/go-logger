@@ -6,6 +6,7 @@ import (
 	"github.com/PavloVM7/go-logger/logger"
 )
 
+// LevelFatal represents the fatal log level, higher than error.
 const LevelFatal logslog.Level = 12
 
 func loggerLevelToSlogLevel(level logger.Level) logslog.Level {
