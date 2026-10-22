@@ -1,26 +1,26 @@
-package internal_slog
+package slog
 
 import (
-	"log/slog"
+	logslog "log/slog"
 
 	"github.com/PavloVM7/go-logger/logger"
 )
 
-const LevelFatal slog.Level = 12
+const LevelFatal logslog.Level = 12
 
-func loggerLevelToSlogLevel(level logger.Level) slog.Level {
+func loggerLevelToSlogLevel(level logger.Level) logslog.Level {
 	switch level {
 	case logger.DebugLevel:
-		return slog.LevelDebug
+		return logslog.LevelDebug
 	case logger.InfoLevel:
-		return slog.LevelInfo
+		return logslog.LevelInfo
 	case logger.WarnLevel:
-		return slog.LevelWarn
+		return logslog.LevelWarn
 	case logger.ErrorLevel:
-		return slog.LevelError
+		return logslog.LevelError
 	case logger.FatalLevel:
 		return LevelFatal
 	default:
-		return slog.LevelDebug
+		return logslog.Level(level)
 	}
 }

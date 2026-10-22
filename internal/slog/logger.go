@@ -1,8 +1,8 @@
-package internal_slog
+package slog
 
 import (
 	"context"
-	"log/slog"
+	logslog "log/slog"
 	"os"
 )
 
@@ -10,17 +10,17 @@ var osExit = os.Exit
 
 type slogWrapper struct {
 	ctx        context.Context
-	lg         *slog.Logger
+	lg         *logslog.Logger
 	dateFormat string
 }
 
-func newSlogWrapper(h slog.Handler) *slogWrapper {
+func newSlogWrapper(h logslog.Handler) *slogWrapper {
 	if h == nil {
 		return nil
 	}
 	return &slogWrapper{
 		ctx: context.Background(),
-		lg:  slog.New(h),
+		lg:  logslog.New(h),
 	}
 }
 
@@ -29,14 +29,14 @@ func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
 	osExit(1)
 }
 func (l *slogWrapper) Errorw(msg string, keysAndValues ...any) {
-	l.lg.Log(l.ctx, slog.LevelError, msg, keysAndValues...)
+	l.lg.Log(l.ctx, logslog.LevelError, msg, keysAndValues...)
 }
 func (l *slogWrapper) Warnw(msg string, keysAndValues ...any) {
-	l.lg.Log(l.ctx, slog.LevelWarn, msg, keysAndValues...)
+	l.lg.Log(l.ctx, logslog.LevelWarn, msg, keysAndValues...)
 }
 func (l *slogWrapper) Infow(msg string, keysAndValues ...any) {
-	l.lg.Log(l.ctx, slog.LevelInfo, msg, keysAndValues...)
+	l.lg.Log(l.ctx, logslog.LevelInfo, msg, keysAndValues...)
 }
 func (l *slogWrapper) Debugw(msg string, keysAndValues ...any) {
-	l.lg.Log(l.ctx, slog.LevelDebug, msg, keysAndValues...)
+	l.lg.Log(l.ctx, logslog.LevelDebug, msg, keysAndValues...)
 }
