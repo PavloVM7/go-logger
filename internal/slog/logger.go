@@ -9,9 +9,8 @@ import (
 var osExit = os.Exit
 
 type slogWrapper struct {
-	ctx        context.Context
-	lg         *logslog.Logger
-	dateFormat string
+	ctx context.Context
+	lg  *logslog.Logger
 }
 
 func newSlogWrapper(h logslog.Handler) *slogWrapper {

@@ -2,6 +2,7 @@
 package slog
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -9,20 +10,20 @@ import (
 	"time"
 )
 
-func levelStringToShortString(levelStr string) string {
+func levelStringToShortString(levelStr string) logslog.Level {
 	switch levelStr {
 	case "DEBUG", "debug":
-		return "DBG"
+		return logslog.LevelDebug
 	case "INFO", "info":
-		return "INF"
+		return logslog.LevelInfo
 	case "WARN", "warn":
-		return "WRN"
+		return logslog.LevelWarn
 	case "ERROR", "error":
-		return "ERR"
+		return logslog.LevelError
 	case "FATAL", "fatal", "12", "ERROR+4":
-		return "FTL"
+		return LevelFatal
 	default:
-		return levelStr
+		return logslog.LevelDebug - 4
 	}
 }
 
@@ -58,8 +59,8 @@ func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string)
 			}
 		}
 		if a.Key == logslog.LevelKey {
-			levelStr := a.Value.String()
-			a.Value = logslog.StringValue(levelStringToShortString(levelStr))
+			lvl := levelStringToShortString(a.Value.String())
+			a.Value = logslog.StringValue(levelToShortString(lvl))
 			return a
 		}
 		if originalReplace == nil {
@@ -87,19 +88,13 @@ func (h *textHandler) WithGroup(name string) logslog.Handler {
 	return h.h.WithGroup(name)
 }
 func (h *textHandler) Handle(ctx context.Context, r logslog.Record) error {
-	timeStr := r.Time.Format(h.dateFormat)
-	if _, err := h.w.Write([]byte(timeStr)); err != nil {
-		return err
-	}
-	space := []byte(" ")
-	if _, err := h.w.Write(space); err != nil {
-		return err
-	}
-	levelStr := levelToShortString(r.Level)
-	if _, err := h.w.Write([]byte(levelStr)); err != nil {
-		return err
-	}
-	if _, err := h.w.Write(space); err != nil {
+	var buf bytes.Buffer
+	buf.WriteString(r.Time.Format(h.dateFormat))
+	buf.WriteByte(' ')
+	buf.WriteString(levelToShortString(r.Level))
+	buf.WriteByte(' ')
+
+	if _, err := buf.WriteTo(h.w); err != nil {
 		return err
 	}
 
