@@ -7,6 +7,23 @@ import (
 	"time"
 )
 
+func levelToShortString(levelStr string) string {
+	switch levelStr {
+	case "DEBUG", "debug":
+		return "DBG"
+	case "INFO", "info":
+		return "INF"
+	case "WARN", "warn":
+		return "WRN"
+	case "ERROR", "error":
+		return "ERR"
+	case "FATAL", "fatal", "12", "ERROR+4":
+		return "FTL"
+	default:
+		return levelStr
+	}
+}
+
 func newJsonHandler(w io.Writer, opt *slog.HandlerOptions, dateFormat string) *slog.JSONHandler {
 	if len(dateFormat) == 0 {
 		dateFormat = time.RFC3339Nano
@@ -19,6 +36,11 @@ func newJsonHandler(w io.Writer, opt *slog.HandlerOptions, dateFormat string) *s
 				a.Value = slog.StringValue(tm.Format(dateFormat))
 				return a
 			}
+		}
+		if a.Key == slog.LevelKey {
+			levelStr := a.Value.String()
+			a.Value = slog.StringValue(levelToShortString(levelStr))
+			return a
 		}
 		if originalReplace == nil {
 			return a
@@ -62,6 +84,10 @@ func newTextHandler(w io.Writer, opt *slog.HandlerOptions, dateFormat string) *t
 	opt.ReplaceAttr = func(groups []string, a slog.Attr) slog.Attr {
 		if a.Key == slog.TimeKey {
 			return slog.Attr{}
+		}
+		if a.Key == slog.LevelKey {
+			levelStr := a.Value.String()
+			a.Value = slog.StringValue(levelToShortString(levelStr))
 		}
 
 		if originalReplace == nil {

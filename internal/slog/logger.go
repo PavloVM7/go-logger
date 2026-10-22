@@ -3,7 +3,10 @@ package internal_slog
 import (
 	"context"
 	"log/slog"
+	"os"
 )
+
+var osExit = os.Exit
 
 type slogWrapper struct {
 	ctx        context.Context
@@ -23,6 +26,7 @@ func newSlogWrapper(h slog.Handler) *slogWrapper {
 
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, LevelFatal, msg, keysAndValues...)
+	osExit(1)
 }
 func (l *slogWrapper) Errorw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, slog.LevelError, msg, keysAndValues...)
