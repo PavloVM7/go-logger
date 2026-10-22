@@ -1,5 +1,5 @@
 .PHONY: verify
-verify: format lint test
+verify: format test lint
 	go vet ./...
 
 .PHONY: format
