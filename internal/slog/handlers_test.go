@@ -15,7 +15,7 @@ func init() {
 }
 
 func TestDateFormat(t *testing.T) {
-	const dateFormat = "2006-01-02 15:04:05.000Z07:00"
+	const dateFormat = "2006-01-02 15:04:05.000Z-07:00"
 	t.Run("JSON handler", func(t *testing.T) {
 		buf := bytes.Buffer{}
 		opt := logslog.HandlerOptions{}
