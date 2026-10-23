@@ -13,6 +13,7 @@ lint:
 		-exclude internal/slog/logger_with_test.go \
 		-exclude logger/config_test.go \
 		-exclude logger/level_test.go \
+		-exclude logger/slog_test.go \
 		./...
 
 .PHONY: test

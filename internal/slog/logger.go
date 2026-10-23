@@ -2,11 +2,53 @@ package slog
 
 import (
 	"context"
+	"io"
 	logslog "log/slog"
 	"os"
 )
 
 var osExit = os.Exit
+
+// Config holds the configuration for a slog logger.
+type Config struct {
+	Name       string
+	Level      logslog.Level
+	DateFormat string
+	W          io.Writer
+}
+
+func (c *Config) check() {
+	if c.W == nil {
+		c.W = os.Stdout
+	}
+}
+
+func (c *Config) createHandlerOptions() logslog.HandlerOptions {
+	return logslog.HandlerOptions{
+		Level:     c.Level,
+		AddSource: false,
+	}
+}
+
+// NewWrapperJSON returns a new slog wrapper with JSON formatting.
+// revive:disable-next-line:unexported-return
+func NewWrapperJSON(cfg Config) *slogWrapper {
+	cfg.check()
+	opt := cfg.createHandlerOptions()
+	h := newJSONHandler(cfg.W, &opt, cfg.DateFormat)
+
+	return newSlogWrapper(h)
+}
+
+// NewWrapperText returns a new slog wrapper with text formatting.
+// revive:disable-next-line:unexported-return
+func NewWrapperText(cfg Config) *slogWrapper {
+	cfg.check()
+	opt := cfg.createHandlerOptions()
+	h := newTextHandler(cfg.W, &opt, cfg.DateFormat)
+
+	return newSlogWrapper(h)
+}
 
 type slogWrapper struct {
 	ctx context.Context
