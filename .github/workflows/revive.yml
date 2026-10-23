@@ -27,6 +27,7 @@ jobs:
           # Revive exclude patterns, separated by newline
           exclude: |
             internal/slog/handlers_test.go
+            internal/slog/logger_test.go
             internal/slog/logger_with_test.go
             logger/config_test.go
             logger/level_test.go
