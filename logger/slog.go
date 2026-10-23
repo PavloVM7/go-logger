@@ -2,27 +2,9 @@ package logger
 
 import (
 	"io"
-	logslog "log/slog"
 
 	"github.com/PavloVM7/go-logger/internal/slog"
 )
-
-func loggerLevelToSlogLevel(level Level) logslog.Level {
-	switch level {
-	case DebugLevel:
-		return logslog.LevelDebug
-	case InfoLevel:
-		return logslog.LevelInfo
-	case WarnLevel:
-		return logslog.LevelWarn
-	case ErrorLevel:
-		return logslog.LevelError
-	case FatalLevel:
-		return slog.LevelFatal
-	default:
-		return logslog.Level(level)
-	}
-}
 
 // NewLoggerSlogJSON creates a new slog-based logger with JSON formatting.
 func NewLoggerSlogJSON(cfg Config) (Logger, error) {
@@ -49,12 +31,8 @@ func NewLoggerSlogText(cfg Config) (Logger, error) {
 }
 
 func newSlogConfig(cfg Config, w io.Writer) (slog.Config, error) {
-	level, err := cfg.GetLevel()
-	if err != nil {
-		return slog.Config{}, err
-	}
 	result := slog.Config{
-		Level:      loggerLevelToSlogLevel(level),
+		Level:      cfg.Level,
 		DateFormat: cfg.DateFormat,
 		W:          w,
 	}

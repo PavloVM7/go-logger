@@ -2,6 +2,7 @@ package slog
 
 import (
 	"context"
+	"fmt"
 	"io"
 	logslog "log/slog"
 	"os"
@@ -12,7 +13,7 @@ var osExit = os.Exit
 // Config holds the configuration for a slog logger.
 type Config struct {
 	Name       string
-	Level      logslog.Level
+	Level      string
 	DateFormat string
 	W          io.Writer
 }
@@ -24,8 +25,14 @@ func (c *Config) check() {
 }
 
 func (c *Config) createHandlerOptions() logslog.HandlerOptions {
+	level, err := stringToLevel(c.Level)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "slog config error: %v", err)
+		level = logslog.LevelDebug
+	}
+
 	return logslog.HandlerOptions{
-		Level:     c.Level,
+		Level:     level,
 		AddSource: false,
 	}
 }
