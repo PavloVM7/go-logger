@@ -26,7 +26,7 @@ func Test_JSON_Logger_With(t *testing.T) {
 		val3       = true
 		key4       = "key4"
 		val4       = 7 * time.Hour
-		dateFormat = "2006-01-02T15:04:05.000Z07:00"
+		dateFormat = "2006-01-02T15:04:05.000Z-07:00"
 	)
 
 	optFn := func() logslog.HandlerOptions {

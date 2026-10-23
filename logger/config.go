@@ -3,7 +3,7 @@ package logger
 
 import "strings"
 
-const defaultDateFormat = "2006-01-02 15:04:05.000Z07:00"
+const defaultDateFormat = "2006-01-02T15:04:05.000Z-07:00"
 
 // Config holds the configuration for a logger instance.
 type Config struct {
