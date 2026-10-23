@@ -1,9 +1,21 @@
-fignoreGeneratedHeader = true
+# When set to false, ignores files with "GENERATED" header, similar to golint
+ignore-generated-header = true
+
+# Sets the default severity to "warning"
 severity = "error"
+
+# Sets the default failure confidence. This means that linting errors
+# with less than 0.8 confidence will be ignored.
 confidence = 0.8
-errorCode = 1
-warningCode = 0
-enableAllRules = true
+
+# Sets the error code for failures with the "error" severity
+error-code = 1
+
+# Sets the error code for failures with severity "warning"
+warning-code = 0
+
+enable-all-rules = true
+
 ignore = ["TEST"]
 
 [rule.line-length-limit]
