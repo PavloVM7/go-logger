@@ -30,6 +30,7 @@ jobs:
             internal/slog/logger_with_test.go
             logger/config_test.go
             logger/level_test.go
+            logger/slog_test.go
           # Revive path pattern
           path: # optional
           # Fail on any issue. Overrides the error and warning code in config
