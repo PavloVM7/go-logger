@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/PavloVM7/go-logger/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,9 +19,10 @@ func TestNewWrapperJSON(t *testing.T) {
 			Name:       "test-logger",
 			Level:      "info",
 			DateFormat: dateFormat,
+			Encoding:   internal.JSONEncoding,
 			W:          &buf,
 		}
-		l := NewWrapperJSON(cfg)
+		l := NewWrapper(cfg)
 		l.Debugw(message)
 		assert.Empty(t, buf.String())
 		l.Infow(message)
@@ -33,9 +35,10 @@ func TestNewWrapperJSON(t *testing.T) {
 			Name:       "test-logger",
 			Level:      "unknown",
 			DateFormat: dateFormat,
+			Encoding:   internal.JSONEncoding,
 			W:          &buf,
 		}
-		l := NewWrapperJSON(cfg)
+		l := NewWrapper(cfg)
 		l.Debugw(message)
 		assert.NotEmpty(t, buf.String())
 		buf.Reset()
@@ -56,6 +59,7 @@ func TestNewWrapperText(t *testing.T) {
 			Name:       "test-logger",
 			Level:      "info",
 			DateFormat: dateFormat,
+			Encoding:   internal.ConsoleEncoding,
 			W:          &buf,
 		}
 		l := NewWrapperText(cfg)

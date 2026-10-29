@@ -58,6 +58,7 @@ func TestSlogLogger_With_JSON(t *testing.T) {
 		DateFormat: dateFormat,
 	}
 	t.Run("JSON handler", func(t *testing.T) {
+		config.Encoding = "json"
 		for _, tt := range tests {
 			buf := bytes.Buffer{}
 			cfg, err := newSlogConfig(config, &buf)

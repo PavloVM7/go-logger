@@ -6,16 +6,16 @@ import (
 	"io"
 	logslog "log/slog"
 	"os"
+
+	"github.com/PavloVM7/go-logger/internal"
 )
 
 var osExit = os.Exit
 
 // Config holds the configuration for a slog logger.
 type Config struct {
-	Name       string
-	Level      string
-	DateFormat string
-	W          io.Writer
+	internal.ConfigBase
+	W io.Writer
 }
 
 func (c *Config) check() {
@@ -37,19 +37,25 @@ func (c *Config) createHandlerOptions() logslog.HandlerOptions {
 	}
 }
 
-// NewWrapperJSON returns a new slog wrapper with JSON formatting.
-// revive:disable-next-line:unexported-return
-func NewWrapperJSON(cfg Config) *slogWrapper {
+// NewWrapper returns a new slog wrapper with JSON formatting.
+// revive:disable:unexported-return
+func NewWrapper(cfg Config) *slogWrapper {
 	cfg.check()
 	opt := cfg.createHandlerOptions()
-	h := newJSONHandler(cfg.W, &opt, cfg.DateFormat)
+	var h logslog.Handler
+	encoding := internal.EncodingFromString(cfg.Encoding.String())
+	if encoding == internal.JSONEncoding {
+		h = newJSONHandler(cfg.W, &opt, cfg.DateFormat)
+	} else {
+		h = newTextHandler(cfg.W, &opt, cfg.DateFormat)
+	}
 
 	return newSlogWrapper(h)
 }
 
 // NewWrapperText returns a new slog wrapper with text formatting.
 // revive:disable-next-line:unexported-return
-func NewWrapperText(cfg Config) *slogWrapper {
+func NewWrapperText(cfg Config) *slogWrapper { // TODO: remove it
 	cfg.check()
 	opt := cfg.createHandlerOptions()
 	h := newTextHandler(cfg.W, &opt, cfg.DateFormat)

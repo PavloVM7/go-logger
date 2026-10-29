@@ -11,6 +11,7 @@ type Config struct {
 	Level      string `json:"level" yaml:"level"`
 	AddSource  bool   `json:"add_source" yaml:"add_source"`
 	DateFormat string `json:"date_format" yaml:"date_format"`
+	Encoding   string `json:"encoding" yaml:"encoding"`
 }
 
 // GetLevel parses and returns the log level from the configuration.
