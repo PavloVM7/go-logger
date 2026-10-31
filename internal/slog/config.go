@@ -61,7 +61,7 @@ func (c *Config) check() {
 func (c *Config) createHandlerOptions() logslog.HandlerOptions {
 	level, err := stringToLevel(c.Level)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "slog config error: %v", err)
+		fmt.Printf("slog config error: %v", err)
 		level = logslog.LevelDebug
 	}
 

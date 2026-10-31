@@ -3,7 +3,6 @@ package zap
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -68,7 +67,7 @@ func stringToZapLevel(level string) zapcore.Level {
 	}
 	result, ok := levelsMap[level]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "unknown level string '%s'", level)
+		fmt.Printf("unknown level string '%s'", level)
 		return zap.DebugLevel
 	}
 	return result
