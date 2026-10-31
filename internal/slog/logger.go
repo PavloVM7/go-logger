@@ -2,80 +2,67 @@ package slog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	logslog "log/slog"
 	"os"
+	"slices"
 
 	"github.com/PavloVM7/go-logger/internal"
 )
 
 var osExit = os.Exit
 
-// Config holds the configuration for a slog logger.
-type Config struct {
-	internal.ConfigBase
-	W io.Writer
-}
-
-func (c *Config) check() {
-	if c.W == nil {
-		c.W = os.Stdout
-	}
-}
-
-func (c *Config) createHandlerOptions() logslog.HandlerOptions {
-	level, err := stringToLevel(c.Level)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "slog config error: %v", err)
-		level = logslog.LevelDebug
-	}
-
-	return logslog.HandlerOptions{
-		Level:     level,
-		AddSource: false,
-	}
-}
-
 // NewWrapper returns a new slog wrapper with JSON formatting.
 // revive:disable:unexported-return
-func NewWrapper(cfg Config) *slogWrapper {
+func NewWrapper(cfg Config) (*slogWrapper, error) {
 	cfg.check()
 	opt := cfg.createHandlerOptions()
+	writer, err := cfg.createWriter()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create slog wrapper: %w", err)
+	}
 	var h logslog.Handler
 	encoding := internal.EncodingFromString(cfg.Encoding.String())
 	if encoding == internal.JSONEncoding {
-		h = newJSONHandler(cfg.W, &opt, cfg.DateFormat)
+		h = newJSONHandler(writer, &opt, cfg.DateFormat)
 	} else {
-		h = newTextHandler(cfg.W, &opt, cfg.DateFormat)
+		h = newTextHandler(writer, &opt, cfg.DateFormat)
 	}
 
 	return newSlogWrapper(h)
 }
 
-// NewWrapperText returns a new slog wrapper with text formatting.
-// revive:disable-next-line:unexported-return
-func NewWrapperText(cfg Config) *slogWrapper { // TODO: remove it
-	cfg.check()
-	opt := cfg.createHandlerOptions()
-	h := newTextHandler(cfg.W, &opt, cfg.DateFormat)
-
-	return newSlogWrapper(h)
-}
-
-type slogWrapper struct {
-	ctx context.Context
-	lg  *logslog.Logger
-}
-
-func newSlogWrapper(h logslog.Handler) *slogWrapper {
+func newSlogWrapper(h logslog.Handler) (*slogWrapper, error) {
 	if h == nil {
-		return nil
+		return nil, errors.New("a handler couldn't be nil")
 	}
+
 	return &slogWrapper{
 		ctx: context.Background(),
 		lg:  logslog.New(h),
+	}, nil
+}
+
+type slogWrapper struct {
+	ctx     context.Context
+	lg      *logslog.Logger
+	writers []io.Writer
+}
+
+func (l *slogWrapper) addWriter(w io.Writer) bool {
+	if w == nil {
+		return false
 	}
+	for i := 0; i < len(l.writers); i++ {
+		if w == l.writers[i] {
+			return false
+		}
+	}
+	l.writers = append(l.writers, w)
+	l.writers = slices.Clip(l.writers)
+	return true
 }
 
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
@@ -93,4 +80,31 @@ func (l *slogWrapper) Infow(msg string, keysAndValues ...any) {
 }
 func (l *slogWrapper) Debugw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, logslog.LevelDebug, msg, keysAndValues...)
+}
+
+func (l *slogWrapper) Close() error {
+	return nil
+}
+
+func closeWriters(writers []io.Writer) {
+	for _, w := range writers {
+		cl, ok := w.(closable)
+		if !ok {
+			continue
+		}
+		closeClosable(cl)
+	}
+}
+
+type closable interface {
+	Close() error
+}
+
+func closeClosable(cl closable) {
+	if cl == os.Stdout || cl == os.Stderr || cl == os.Stdin {
+		return
+	}
+	if err := cl.Close(); err != nil {
+		fmt.Printf("failed to close closable %T, err: %v\n", cl, err)
+	}
 }

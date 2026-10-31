@@ -3,6 +3,11 @@
 // used throughout the logger implementation.
 package internal
 
+const (
+	OutputStdout = "stdout"
+	OutputStderr = "stderr"
+)
+
 // Encoding represents the output encoding format for log entries.
 type Encoding string
 
@@ -16,6 +21,20 @@ const (
 // String returns the string representation of the Encoding.
 func (en Encoding) String() string {
 	return string(en)
+}
+
+// ToDo: check
+func (en Encoding) Set(val string) {
+	encodings := []Encoding{
+		JSONEncoding,
+		ConsoleEncoding,
+	}
+	for _, e := range encodings {
+		if val == e.String() {
+			en = e
+			return
+		}
+	}
 }
 
 // EncodingFromString converts a string to an Encoding value.
@@ -45,6 +64,7 @@ type ConfigBase struct {
 	DateFormat string
 	// Encoding determines the output format for log entries.
 	Encoding Encoding
+	Outputs  []string
 }
 
 // LevelShortString represents a short string representation of log levels.

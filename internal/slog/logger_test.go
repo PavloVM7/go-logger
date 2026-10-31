@@ -6,6 +6,7 @@ import (
 
 	"github.com/PavloVM7/go-logger/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewWrapperJSON(t *testing.T) {
@@ -13,6 +14,7 @@ func TestNewWrapperJSON(t *testing.T) {
 		dateFormat = "2006-01-02T15:04:05.000Z-07:00"
 		message    = "test log message"
 	)
+
 	t.Run("success", func(t *testing.T) {
 		buf := bytes.Buffer{}
 		cfg := Config{
@@ -20,9 +22,11 @@ func TestNewWrapperJSON(t *testing.T) {
 			Level:      "info",
 			DateFormat: dateFormat,
 			Encoding:   internal.JSONEncoding,
-			W:          &buf,
+			Outputs:    []string{internal.OutputStdout},
+			w:          &buf,
 		}
-		l := NewWrapper(cfg)
+		l, err := NewWrapper(cfg)
+		require.NoError(t, err)
 		l.Debugw(message)
 		assert.Empty(t, buf.String())
 		l.Infow(message)
@@ -36,9 +40,11 @@ func TestNewWrapperJSON(t *testing.T) {
 			Level:      "unknown",
 			DateFormat: dateFormat,
 			Encoding:   internal.JSONEncoding,
-			W:          &buf,
+			Outputs:    []string{internal.OutputStdout},
+			w:          &buf,
 		}
-		l := NewWrapper(cfg)
+		l, err := NewWrapper(cfg)
+		require.NoError(t, err)
 		l.Debugw(message)
 		assert.NotEmpty(t, buf.String())
 		buf.Reset()
@@ -60,9 +66,10 @@ func TestNewWrapperText(t *testing.T) {
 			Level:      "info",
 			DateFormat: dateFormat,
 			Encoding:   internal.ConsoleEncoding,
-			W:          &buf,
+			w:          &buf,
 		}
-		l := NewWrapperText(cfg)
+		l, err := NewWrapper(cfg)
+		require.NoError(t, err)
 		l.Debugw(message)
 		assert.Empty(t, buf.String())
 		l.Infow(message)
@@ -75,9 +82,10 @@ func TestNewWrapperText(t *testing.T) {
 			Name:       "test-logger",
 			Level:      "unknown",
 			DateFormat: dateFormat,
-			W:          &buf,
+			w:          &buf,
 		}
-		l := NewWrapperText(cfg)
+		l, err := NewWrapper(cfg)
+		require.NoError(t, err)
 		l.Debugw(message)
 		assert.NotEmpty(t, buf.String())
 		buf.Reset()

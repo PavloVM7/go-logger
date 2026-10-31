@@ -7,11 +7,12 @@ const defaultDateFormat = "2006-01-02T15:04:05.000Z-07:00"
 
 // Config holds the configuration for a logger instance.
 type Config struct {
-	Name       string `json:"name" yaml:"name"`
-	Level      string `json:"level" yaml:"level"`
-	AddSource  bool   `json:"add_source" yaml:"add_source"`
-	DateFormat string `json:"date_format" yaml:"date_format"`
-	Encoding   string `json:"encoding" yaml:"encoding"`
+	Name       string   `json:"name" yaml:"name"`
+	Level      string   `json:"level" yaml:"level"`
+	AddSource  bool     `json:"add_source" yaml:"add_source"`
+	DateFormat string   `json:"date_format" yaml:"date_format"`
+	Encoding   string   `json:"encoding" yaml:"encoding"`
+	Outputs    []string `json:"outputs" yaml:"outputs"`
 }
 
 // GetLevel parses and returns the log level from the configuration.

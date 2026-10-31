@@ -98,11 +98,12 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			jh := newJSONHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper := newSlogWrapper(jh)
+			wrapper, err := newSlogWrapper(jh)
+			require.NoError(t, err)
 			wrapper.Fatalw("fatal message", "key", "value")
 
 			mp := make(map[string]any)
-			err := json.Unmarshal(buf.Bytes(), &mp)
+			err = json.Unmarshal(buf.Bytes(), &mp)
 			require.NoError(t, err)
 			level, ok := mp[logslog.LevelKey].(string)
 			require.True(t, ok, "level key should exist in output")
@@ -113,7 +114,8 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			th := newTextHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper := newSlogWrapper(th)
+			wrapper, err := newSlogWrapper(th)
+			require.NoError(t, err)
 			wrapper.Fatalw("fatal message", "key", "value")
 
 			output := buf.String()

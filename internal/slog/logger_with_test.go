@@ -71,11 +71,12 @@ func Test_Logger_With(t *testing.T) {
 				buf := bytes.Buffer{}
 				opt := optFn()
 				h := newJSONHandler(&buf, &opt, dateFormat)
-				l := newSlogWrapper(h)
+				l, err := newSlogWrapper(h)
+				require.NoError(t, err)
 				tt.logFn(l)
 
 				mp := make(map[string]any)
-				err := json.Unmarshal(buf.Bytes(), &mp)
+				err = json.Unmarshal(buf.Bytes(), &mp)
 				require.NoError(t, err)
 
 				level, ok := mp[logslog.LevelKey].(string)
@@ -112,14 +113,15 @@ func Test_Logger_With(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := optFn()
 			h := newTextHandler(&buf, &opt, dateFormat)
-			l := newSlogWrapper(h)
+			l, err := newSlogWrapper(h)
+			require.NoError(t, err)
 			tt.logFn(l)
 
 			output := buf.String()
 			t.Log("text:", output)
 
 			sub := output[0:len(dateFormat)]
-			_, err := time.Parse(dateFormat, sub)
+			_, err = time.Parse(dateFormat, sub)
 			require.NoError(t, err)
 			_, err = time.Parse(time.DateOnly, sub)
 			require.Error(t, err)

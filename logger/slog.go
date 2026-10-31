@@ -1,42 +1,29 @@
 package logger
 
 import (
-	"io"
-
 	"github.com/PavloVM7/go-logger/internal"
 	"github.com/PavloVM7/go-logger/internal/slog"
 )
 
-// NewLoggerSlogJSON creates a new slog-based logger with JSON formatting.
-func NewLoggerSlogJSON(cfg Config) (Logger, error) {
-	c, err := newSlogConfig(cfg, nil)
+// NewLoggerSlog creates a new slog-based logger with JSON formatting.
+func NewLoggerSlog(cfg Config) (Logger, error) {
+	c, err := newSlogConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	return newWrapperJSON(c), nil
+	return newWrapper(c)
 }
-
-func newWrapperJSON(c slog.Config) Logger {
+func newWrapper(c slog.Config) (Logger, error) {
 	return slog.NewWrapper(c)
 }
 
-// NewLoggerSlogText creates a new slog-based logger with text formatting.
-func NewLoggerSlogText(cfg Config) (Logger, error) {
-	c, err := newSlogConfig(cfg, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return slog.NewWrapperText(c), nil
-}
-
-func newSlogConfig(cfg Config, w io.Writer) (slog.Config, error) {
+func newSlogConfig(cfg Config) (slog.Config, error) {
 	result := slog.Config{
 		Level:      cfg.Level,
 		DateFormat: cfg.DateFormat,
 		Encoding:   internal.EncodingFromString(cfg.Encoding),
-		W:          w,
+		Outputs:    cfg.Outputs,
 	}
 	if len(result.DateFormat) == 0 {
 		result.DateFormat = defaultDateFormat
