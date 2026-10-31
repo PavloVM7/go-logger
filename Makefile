@@ -18,6 +18,7 @@ lint:
 		-exclude logger/level_test.go \
 		-exclude logger/slog_test.go \
 		-exclude pkg/set/set_test.go \
+		-exclude internal/level_test.go \
 		./...
 
 .PHONY: test

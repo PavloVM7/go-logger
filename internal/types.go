@@ -54,23 +54,3 @@ type ConfigBase struct {
 	Encoding Encoding
 	Outputs  []string
 }
-
-// LevelShortString represents a short string representation of log levels.
-type LevelShortString string
-
-const (
-	// DebugShort is the short string representation for debug level.
-	DebugShort LevelShortString = "DBG"
-	// InfoShort is the short string representation for info level.
-	InfoShort LevelShortString = "INF"
-	// WarnShort is the short string representation for warn level.
-	WarnShort LevelShortString = "WRN"
-	// ErrorShort is the short string representation for error level.
-	ErrorShort LevelShortString = "ERR"
-	// FatalShort is the short string representation for fatal level.
-	FatalShort LevelShortString = "FTL"
-)
-
-func (ls LevelShortString) String() string {
-	return string(ls)
-}

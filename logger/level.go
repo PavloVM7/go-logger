@@ -1,6 +1,10 @@
 package logger
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/PavloVM7/go-logger/internal"
+)
 
 // Level represents the severity level of a log message.
 type Level int8
@@ -73,18 +77,20 @@ func (l Level) ShortCapitalString() string {
 
 // ParseLevel converts a string to a Level, returning an error if the string is invalid.
 func ParseLevel(txt string) (Level, error) {
-	switch string(txt) {
-	case "debug":
-		return DebugLevel, nil
-	case "info", "": // make the zero value useful
-		return InfoLevel, nil
-	case "warn", "warning":
-		return WarnLevel, nil
-	case "error":
-		return ErrorLevel, nil
-	case "fatal":
-		return FatalLevel, nil
-	default:
+	kind, err := internal.ParseLevelString(txt)
+	if err != nil {
 		return InfoLevel, fmt.Errorf("%w: '%s'", ErrUnknownLevel, txt)
 	}
+
+	levelMap := map[internal.LevelKind]Level{
+		internal.LevelKindDebug: DebugLevel,
+		internal.LevelKindInfo:  InfoLevel,
+		internal.LevelKindWarn:  WarnLevel,
+		internal.LevelKindError: ErrorLevel,
+		internal.LevelKindFatal: FatalLevel,
+	}
+	if level, ok := levelMap[kind]; ok {
+		return level, nil
+	}
+	return InfoLevel, nil
 }

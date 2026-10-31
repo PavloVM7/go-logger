@@ -29,8 +29,14 @@ func (c *Config) check() {
 }
 
 func newConfig(conf Config) zap.Config {
+	levelKind, err := internal.ParseLevelString(conf.Level)
+	if err != nil {
+		fmt.Printf("unknown level string '%s'", conf.Level)
+		levelKind = internal.LevelKindDebug
+	}
+
 	result := zap.Config{
-		Level:             zap.NewAtomicLevelAt(stringToZapLevel(conf.Level)),
+		Level:             zap.NewAtomicLevelAt(levelKind.ToZapLevel()),
 		Development:       conf.IsDevMode,
 		DisableCaller:     !conf.IsDevMode,
 		DisableStacktrace: true,
@@ -54,22 +60,6 @@ func newEncoderConfig() zapcore.EncoderConfig {
 	result.EncodeLevel = levelShortStringEncoder
 	result.EncodeDuration = zapcore.StringDurationEncoder
 
-	return result
-}
-
-func stringToZapLevel(level string) zapcore.Level {
-	var levelsMap = map[string]zapcore.Level{
-		"debug": zap.DebugLevel,
-		"info":  zap.InfoLevel,
-		"warn":  zap.WarnLevel,
-		"error": zap.ErrorLevel,
-		"fatal": zap.FatalLevel,
-	}
-	result, ok := levelsMap[level]
-	if !ok {
-		fmt.Printf("unknown level string '%s'", level)
-		return zap.DebugLevel
-	}
 	return result
 }
 

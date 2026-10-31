@@ -24,9 +24,11 @@ func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string)
 			}
 		}
 		if a.Key == logslog.LevelKey {
-			lvl := levelStringToShortString(a.Value.String())
-			a.Value = logslog.StringValue(levelToShortString(lvl))
-			return a
+			// Convert slog.Level to LevelKind for short string conversion
+			if lvl, ok := a.Value.Any().(logslog.Level); ok {
+				a.Value = logslog.StringValue(levelToShortString(lvl))
+				return a
+			}
 		}
 		if originalReplace == nil {
 			return a
