@@ -10,10 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	// No-op: each test that needs to override osExit should do so with defer restore
-}
-
 func TestDateFormat(t *testing.T) {
 	const dateFormat = "2006-01-02 15:04:05.000Z-07:00"
 	t.Run("JSON handler", func(t *testing.T) {

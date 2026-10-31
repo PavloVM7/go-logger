@@ -2,12 +2,14 @@
 package slog
 
 import (
+	"bytes"
+	"context"
 	"io"
 	logslog "log/slog"
 	"time"
 )
 
-// newJSONHandler creates a JSON handler with custom time formatting and level abbreviations.
+// revive:disable:cognitive-complexity
 func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string) *logslog.JSONHandler {
 	if len(dateFormat) == 0 {
 		dateFormat = time.RFC3339Nano
