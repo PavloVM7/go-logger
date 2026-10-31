@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	osExit = func(code int) {}
+	// No-op: each test that needs to override osExit should do so with defer restore
 }
 
 func TestDateFormat(t *testing.T) {
@@ -100,6 +100,13 @@ func TestLevelAbbreviations(t *testing.T) {
 			jh := newJSONHandler(&buf, &opt, time.RFC3339Nano)
 			wrapper, err := newSlogWrapper(jh, nil)
 			require.NoError(t, err)
+
+			originalExit := osExit
+			osExit = func(code int) {}
+			defer func() {
+				osExit = originalExit
+			}()
+
 			wrapper.Fatalw("fatal message", "key", "value")
 
 			mp := make(map[string]any)
@@ -116,6 +123,13 @@ func TestLevelAbbreviations(t *testing.T) {
 			th := newTextHandler(&buf, &opt, time.RFC3339Nano)
 			wrapper, err := newSlogWrapper(th, nil)
 			require.NoError(t, err)
+
+			originalExit := osExit
+			osExit = func(code int) {}
+			defer func() {
+				osExit = originalExit
+			}()
+
 			wrapper.Fatalw("fatal message", "key", "value")
 
 			output := buf.String()

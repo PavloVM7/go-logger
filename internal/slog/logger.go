@@ -8,6 +8,7 @@ import (
 	logslog "log/slog"
 	"os"
 	"slices"
+	"sync"
 
 	"github.com/PavloVM7/go-logger/internal"
 )
@@ -51,9 +52,10 @@ func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error
 }
 
 type slogWrapper struct {
-	ctx     context.Context
-	lg      *logslog.Logger
-	writers []io.Writer
+	ctx       context.Context
+	lg        *logslog.Logger
+	writers   []io.Writer
+	closeOnce sync.Once
 }
 
 func (l *slogWrapper) addWriter(w io.Writer) bool {
@@ -72,6 +74,7 @@ func (l *slogWrapper) addWriter(w io.Writer) bool {
 
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, LevelFatal, msg, keysAndValues...)
+	_ = l.Close()
 	osExit(1)
 }
 func (l *slogWrapper) Errorw(msg string, keysAndValues ...any) {
@@ -87,19 +90,35 @@ func (l *slogWrapper) Debugw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, logslog.LevelDebug, msg, keysAndValues...)
 }
 
+// Close closes all closable writers (excluding stdout, stderr, stdin).
+// It is idempotent and safe to call multiple times.
 func (l *slogWrapper) Close() error {
+	var closeErr error
+	l.closeOnce.Do(func() {
+		closeErr = l.closeWriters()
+	})
+	return closeErr
+}
+
+// revive:disable:cognitive-complexity
+func (l *slogWrapper) closeWriters() error {
 	errs := make([]error, 0, len(l.writers))
 	for i := 0; i < len(l.writers); i++ {
 		w := l.writers[i]
-		if w == os.Stdout || w == os.Stderr || w == os.Stdin {
+		if isStdWriter(w) {
 			continue
 		}
 		if cl, ok := w.(closable); ok {
-			errs = append(errs, cl.Close())
+			if err := cl.Close(); err != nil {
+				errs = append(errs, fmt.Errorf("failed to close writer %T: %w", w, err))
+			}
 		}
 	}
-
 	return errors.Join(errs...)
+}
+
+func isStdWriter(w io.Writer) bool {
+	return w == os.Stdout || w == os.Stderr || w == os.Stdin
 }
 
 func closeWriters(writers []io.Writer) {
@@ -114,6 +133,10 @@ func closeWriters(writers []io.Writer) {
 
 type closable interface {
 	Close() error
+}
+
+type flusher interface {
+	Flush() error
 }
 
 func closeClosable(cl closable) {

@@ -2,14 +2,12 @@
 package slog
 
 import (
-	"bytes"
-	"context"
 	"io"
 	logslog "log/slog"
 	"time"
 )
 
-// revive:disable:cognitive-complexity
+// newJSONHandler creates a JSON handler with custom time formatting and level abbreviations.
 func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string) *logslog.JSONHandler {
 	if len(dateFormat) == 0 {
 		dateFormat = time.RFC3339Nano
@@ -17,23 +15,23 @@ func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string)
 
 	originalReplace := opt.ReplaceAttr
 	opt.ReplaceAttr = func(groups []string, a logslog.Attr) logslog.Attr {
-		if a.Key == logslog.TimeKey {
+		switch a.Key {
+		case logslog.TimeKey:
 			if tm, ok := a.Value.Any().(time.Time); ok {
 				a.Value = logslog.StringValue(tm.Format(dateFormat))
 				return a
 			}
-		}
-		if a.Key == logslog.LevelKey {
-			// Convert slog.Level to LevelKind for short string conversion
+		case logslog.LevelKey:
 			if lvl, ok := a.Value.Any().(logslog.Level); ok {
 				a.Value = logslog.StringValue(levelToShortString(lvl))
 				return a
 			}
+		default:
+			if originalReplace != nil {
+				return originalReplace(groups, a)
+			}
 		}
-		if originalReplace == nil {
-			return a
-		}
-		return originalReplace(groups, a)
+		return a
 	}
 
 	return logslog.NewJSONHandler(w, opt)
