@@ -3,6 +3,7 @@ package zap
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -114,7 +115,6 @@ func Test_Logger_With(t *testing.T) {
 
 	t.Run("console", func(t *testing.T) {
 		cfg.Encoding = internal.ConsoleEncoding
-		// conf := newConfig(cfg)
 
 		for _, tt := range tests {
 			buf := bytes.Buffer{}
@@ -169,11 +169,11 @@ func getJson(t *testing.T, src string) string {
 	return src[b : e+1]
 }
 
-func newLogger(t *testing.T, cfg Config, buf *bytes.Buffer) *zapLogger {
+func newLogger(t *testing.T, cfg Config, w io.Writer) *zapLogger {
 	cfg.check()
 	conf := newConfig(cfg)
 
-	writeSyncer := zapcore.AddSync(buf)
+	writeSyncer := zapcore.AddSync(w)
 
 	encoder := newEncoder(t, cfg.Encoding, conf.EncoderConfig)
 	zc := zapcore.NewCore(encoder, writeSyncer, conf.Level)

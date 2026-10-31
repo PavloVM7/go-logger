@@ -14,16 +14,13 @@ import (
 
 // Config holds the configuration settings for the zap logger.
 type Config struct {
-	Name       string
-	DateFormat string
-	Level      string
-	Encoding   internal.Encoding
-	IsDevMode  bool
+	internal.ConfigBase
+	IsDevMode bool
 }
 
 func (c *Config) check() {
 	if len(c.Encoding) == 0 {
-		c.Encoding = "json"
+		c.Encoding = internal.JSONEncoding
 	}
 	name := strings.TrimSpace(c.Name)
 	if len(name) == 0 {
@@ -46,6 +43,9 @@ func newConfig(conf Config) zap.Config {
 	}
 	if len(conf.DateFormat) > 0 {
 		result.EncoderConfig.EncodeTime = timeEncoder(conf.DateFormat)
+	}
+	if len(conf.Outputs) > 0 {
+		result.OutputPaths = conf.Outputs
 	}
 	return result
 }
