@@ -71,7 +71,7 @@ func Test_Logger_With(t *testing.T) {
 				buf := bytes.Buffer{}
 				opt := optFn()
 				h := newJSONHandler(&buf, &opt, dateFormat)
-				l, err := newSlogWrapper(h)
+				l, err := newSlogWrapper(h, nil)
 				require.NoError(t, err)
 				tt.logFn(l)
 
@@ -113,7 +113,7 @@ func Test_Logger_With(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := optFn()
 			h := newTextHandler(&buf, &opt, dateFormat)
-			l, err := newSlogWrapper(h)
+			l, err := newSlogWrapper(h, nil)
 			require.NoError(t, err)
 			tt.logFn(l)
 

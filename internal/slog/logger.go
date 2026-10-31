@@ -19,7 +19,11 @@ var osExit = os.Exit
 func NewWrapper(cfg Config) (*slogWrapper, error) {
 	cfg.check()
 	opt := cfg.createHandlerOptions()
-	writer, err := cfg.createWriter()
+	writers, err := cfg.createWriters()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create slog wrapper: %w", err)
+	}
+	writer, err := createWriter(writers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create slog wrapper: %w", err)
 	}
@@ -31,17 +35,18 @@ func NewWrapper(cfg Config) (*slogWrapper, error) {
 		h = newTextHandler(writer, &opt, cfg.DateFormat)
 	}
 
-	return newSlogWrapper(h)
+	return newSlogWrapper(h, writers)
 }
 
-func newSlogWrapper(h logslog.Handler) (*slogWrapper, error) {
+func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error) {
 	if h == nil {
 		return nil, errors.New("a handler couldn't be nil")
 	}
 
 	return &slogWrapper{
-		ctx: context.Background(),
-		lg:  logslog.New(h),
+		ctx:     context.Background(),
+		lg:      logslog.New(h),
+		writers: writers,
 	}, nil
 }
 
@@ -83,7 +88,18 @@ func (l *slogWrapper) Debugw(msg string, keysAndValues ...any) {
 }
 
 func (l *slogWrapper) Close() error {
-	return nil
+	errs := make([]error, 0, len(l.writers))
+	for i := 0; i < len(l.writers); i++ {
+		w := l.writers[i]
+		if w == os.Stdout || w == os.Stderr || w == os.Stdin {
+			continue
+		}
+		if cl, ok := w.(closable); ok {
+			errs = append(errs, cl.Close())
+		}
+	}
+
+	return errors.Join(errs...)
 }
 
 func closeWriters(writers []io.Writer) {

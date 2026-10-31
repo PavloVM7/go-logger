@@ -98,7 +98,7 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			jh := newJSONHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper, err := newSlogWrapper(jh)
+			wrapper, err := newSlogWrapper(jh, nil)
 			require.NoError(t, err)
 			wrapper.Fatalw("fatal message", "key", "value")
 
@@ -114,7 +114,7 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			th := newTextHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper, err := newSlogWrapper(th)
+			wrapper, err := newSlogWrapper(th, nil)
 			require.NoError(t, err)
 			wrapper.Fatalw("fatal message", "key", "value")
 

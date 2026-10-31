@@ -19,10 +19,12 @@ type Config struct {
 	w io.Writer
 }
 
+// AddStdoutOutput adds stdout to the logger outputs.
 func (c *Config) AddStdoutOutput() {
 	c.AddOutput(internal.OutputStdout)
 }
 
+// AddOutput adds a custom output to the logger outputs.
 func (c *Config) AddOutput(output string) {
 	if slices.Contains(c.Outputs, output) {
 		return
@@ -69,7 +71,7 @@ func (c *Config) createHandlerOptions() logslog.HandlerOptions {
 	}
 }
 
-func (c *Config) createWriter() (io.Writer, error) {
+func (c *Config) createWriters() ([]io.Writer, error) {
 	c.check()
 	writers, err := createWrites(c.Outputs)
 	if err != nil {
@@ -81,6 +83,10 @@ func (c *Config) createWriter() (io.Writer, error) {
 		_ = addWriter(&writers, c.w)
 	}
 
+	return writers, nil
+}
+
+func createWriter(writers []io.Writer) (io.Writer, error) {
 	if len(writers) == 0 {
 		return nil, errors.New("no writers for logging")
 	}
@@ -102,12 +108,7 @@ func createWrites(outputs []string) ([]io.Writer, error) {
 		case internal.OutputStderr:
 			err = addWriter(&result, os.Stderr)
 		default:
-			f, err := createLogFile(out)
-			if err != nil {
-				closeClosable(f)
-				break
-			}
-			err = addWriter(&result, f)
+			err = addFile(&result, out)
 		}
 
 		if err != nil {
@@ -124,6 +125,14 @@ func createWrites(outputs []string) ([]io.Writer, error) {
 	return slices.Clip(result), nil
 }
 
+func addFile(writers *[]io.Writer, fileName string) error {
+	f, err := createLogFile(fileName)
+	if err != nil {
+		return err
+	}
+	return addWriter(writers, f)
+}
+
 func addWriter(writers *[]io.Writer, w io.Writer) error {
 	if slices.Contains(*writers, w) {
 		return errors.New("duplicate writer")
@@ -137,5 +146,5 @@ func createLogFile(fileName string) (*os.File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}
-	return logFile, err
+	return logFile, nil
 }

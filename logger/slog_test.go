@@ -63,8 +63,15 @@ func TestSlogLogger_With_JSON(t *testing.T) {
 		DateFormat: dateFormat,
 		Outputs:    []string{"stdout", "../tests/data/tmp/slog-logger.log"},
 	}
+
 	t.Run("JSON handler", func(t *testing.T) {
 		config.Encoding = "json"
+		_ = os.Remove(config.Outputs[1])
+
+		defer func() {
+			_ = os.Remove(config.Outputs[1])
+		}()
+
 		for _, tt := range tests {
 			cfg, err := newSlogConfig(config)
 			require.NoError(t, err)

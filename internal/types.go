@@ -4,7 +4,9 @@
 package internal
 
 const (
+	// OutputStdout represents the standard output stream.
 	OutputStdout = "stdout"
+	// OutputStderr represents the standard error stream.
 	OutputStderr = "stderr"
 )
 
@@ -21,20 +23,6 @@ const (
 // String returns the string representation of the Encoding.
 func (en Encoding) String() string {
 	return string(en)
-}
-
-// ToDo: check
-func (en Encoding) Set(val string) {
-	encodings := []Encoding{
-		JSONEncoding,
-		ConsoleEncoding,
-	}
-	for _, e := range encodings {
-		if val == e.String() {
-			en = e
-			return
-		}
-	}
 }
 
 // EncodingFromString converts a string to an Encoding value.
