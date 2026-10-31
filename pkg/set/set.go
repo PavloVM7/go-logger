@@ -5,6 +5,8 @@
 // Package set contains type and methods for working with set
 package set
 
+import "maps"
+
 // Set is a set
 type Set[T comparable] map[T]struct{}
 
@@ -85,18 +87,18 @@ func (s Set[T]) IsEmpty() bool {
 // Copy creates a copy of the set
 func (s Set[T]) Copy() Set[T] {
 	result := NewCapacity[T](len(s))
-	for k, v := range s {
-		result[k] = v
-	}
+	maps.Copy(result, s)
 
 	return result
 }
 
-// TrimToLen trims the set to the length
-func (s Set[T]) TrimToLen() {
-	cpy := s.Copy() //nolint:staticcheck
-	r := &s
-	*r = cpy
+// TrimToLen trims the set to the length by creating a new set with exact capacity
+func (s *Set[T]) TrimToLen() {
+	if s == nil || *s == nil {
+		return
+	}
+	cpy := s.Copy()
+	*s = cpy
 }
 
 // Size returns the size of the set
