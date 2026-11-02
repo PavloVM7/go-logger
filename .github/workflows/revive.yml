@@ -28,6 +28,7 @@ jobs:
           exclude: |
             internal/level_test.go
             internal/slog/handlers_test.go
+            internal/slog/level_test.go
             internal/slog/logger_test.go
             internal/slog/logger_with_test.go
             internal/zap/logger_test.go
