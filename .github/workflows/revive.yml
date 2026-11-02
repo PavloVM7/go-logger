@@ -26,6 +26,7 @@ jobs:
           config: revive.toml
           # Revive exclude patterns, separated by newline
           exclude: |
+            internal/level_test.go
             internal/slog/handlers_test.go
             internal/slog/logger_test.go
             internal/slog/logger_with_test.go
@@ -34,8 +35,8 @@ jobs:
             logger/config_test.go
             logger/level_test.go
             logger/slog_test.go
+            logger/zap_test.go
             pkg/set/set_test.go
-            internal/level_test.go
           # Revive path pattern
           path: # optional
           # Fail on any issue. Overrides the error and warning code in config
