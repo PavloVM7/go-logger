@@ -36,7 +36,7 @@ func newConfig(conf Config) zap.Config {
 	}
 
 	result := zap.Config{
-		Level:             zap.NewAtomicLevelAt(levelKind.ToZapLevel()),
+		Level:             zap.NewAtomicLevelAt(kindLevelToZapLevel(levelKind)),
 		Development:       conf.IsDevMode,
 		DisableCaller:     !conf.IsDevMode,
 		DisableStacktrace: true,

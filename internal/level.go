@@ -3,15 +3,7 @@ package internal
 
 import (
 	"fmt"
-	"log/slog"
 	"strings"
-
-	"go.uber.org/zap/zapcore"
-)
-
-const (
-	// SlogFatalLevel represents the custom fatal log level for slog.
-	SlogFatalLevel slog.Level = 12
 )
 
 // LevelShortString represents a short string representation of log levels.
@@ -72,77 +64,18 @@ func ParseLevelString(level string) (LevelKind, error) {
 	}
 }
 
-// ToSlogLevel converts LevelKind to slog.Level.
-func (lk LevelKind) ToSlogLevel() slog.Level {
-	slogLevels := map[LevelKind]slog.Level{
-		LevelKindDebug: slog.LevelDebug,
-		LevelKindInfo:  slog.LevelInfo,
-		LevelKindWarn:  slog.LevelWarn,
-		LevelKindError: slog.LevelError,
-		LevelKindFatal: SlogFatalLevel,
-	}
-	if sl, ok := slogLevels[lk]; ok {
-		return sl
-	}
-	return slog.LevelInfo
-}
-
-// ToZapLevel converts LevelKind to zapcore.Level.
-func (lk LevelKind) ToZapLevel() zapcore.Level {
-	zapLevels := map[LevelKind]zapcore.Level{
-		LevelKindDebug: zapcore.DebugLevel,
-		LevelKindInfo:  zapcore.InfoLevel,
-		LevelKindWarn:  zapcore.WarnLevel,
-		LevelKindError: zapcore.ErrorLevel,
-		LevelKindFatal: zapcore.FatalLevel,
-	}
-	if zl, ok := zapLevels[lk]; ok {
-		return zl
-	}
-	return zapcore.DebugLevel
+var shortStrings = map[LevelKind]string{
+	LevelKindDebug: DebugShort.String(),
+	LevelKindInfo:  InfoShort.String(),
+	LevelKindWarn:  WarnShort.String(),
+	LevelKindError: ErrorShort.String(),
+	LevelKindFatal: FatalShort.String(),
 }
 
 // ToShortString converts LevelKind to its short string representation.
 func (lk LevelKind) ToShortString() string {
-	shortStrings := map[LevelKind]string{
-		LevelKindDebug: DebugShort.String(),
-		LevelKindInfo:  InfoShort.String(),
-		LevelKindWarn:  WarnShort.String(),
-		LevelKindError: ErrorShort.String(),
-		LevelKindFatal: FatalShort.String(),
-	}
 	if s, ok := shortStrings[lk]; ok {
 		return s
 	}
 	return fmt.Sprintf("LVL%d", lk)
-}
-
-// FromSlogLevel converts slog.Level to LevelKind.
-func FromSlogLevel(level slog.Level) LevelKind {
-	levelMap := map[slog.Level]LevelKind{
-		slog.LevelDebug: LevelKindDebug,
-		slog.LevelInfo:  LevelKindInfo,
-		slog.LevelWarn:  LevelKindWarn,
-		slog.LevelError: LevelKindError,
-		SlogFatalLevel:  LevelKindFatal,
-	}
-	if kind, ok := levelMap[level]; ok {
-		return kind
-	}
-	return LevelKindDebug
-}
-
-// FromZapLevel converts zapcore.Level to LevelKind.
-func FromZapLevel(level zapcore.Level) LevelKind {
-	levelMap := map[zapcore.Level]LevelKind{
-		zapcore.DebugLevel: LevelKindDebug,
-		zapcore.InfoLevel:  LevelKindInfo,
-		zapcore.WarnLevel:  LevelKindWarn,
-		zapcore.ErrorLevel: LevelKindError,
-		zapcore.FatalLevel: LevelKindFatal,
-	}
-	if kind, ok := levelMap[level]; ok {
-		return kind
-	}
-	return LevelKindDebug
 }
