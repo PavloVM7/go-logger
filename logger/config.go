@@ -20,3 +20,11 @@ func (c *Config) GetLevel() (Level, error) {
 	low := strings.ToLower(strings.TrimSpace(c.Level))
 	return ParseLevel(low)
 }
+
+func (c *Config) levelToString() (string, error) {
+	lvl, err := c.GetLevel()
+	if err != nil {
+		return "", err
+	}
+	return lvl.String(), nil
+}

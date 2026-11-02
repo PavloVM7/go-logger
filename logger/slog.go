@@ -19,8 +19,12 @@ func newWrapper(c slog.Config) (Logger, error) {
 }
 
 func newSlogConfig(cfg Config) (slog.Config, error) {
+	stringLevel, err := cfg.levelToString()
+	if err != nil {
+		return slog.Config{}, err
+	}
 	result := slog.Config{
-		Level:      cfg.Level,
+		Level:      stringLevel,
 		DateFormat: cfg.DateFormat,
 		Encoding:   internal.EncodingFromString(cfg.Encoding),
 		Outputs:    cfg.Outputs,

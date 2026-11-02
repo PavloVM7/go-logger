@@ -444,16 +444,8 @@ func TestZapLogger_InvalidLevel(t *testing.T) {
 	_ = os.Remove(logFile)
 
 	l, err := NewLoggerZap(config)
-	require.NoError(t, err, "invalid level should default to debug")
-
-	l.Infow("test message")
-
-	checkCloseError(t, l.Close())
-	output := readLogFile(t, logFile)
-	if len(output) > 0 {
-		require.NoError(t, os.Remove(logFile))
-	}
-	require.Len(t, output, 1)
+	require.Error(t, err, "invalid level should cause an error")
+	require.Nil(t, l)
 }
 
 func TestZapLogger_Fatalw(t *testing.T) {
