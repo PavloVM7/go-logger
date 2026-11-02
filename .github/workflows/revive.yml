@@ -32,6 +32,7 @@ jobs:
             internal/slog/logger_test.go
             internal/slog/logger_with_test.go
             internal/zap/logger_test.go
+            internal/zap/level_test.go
             internal/zap/logger_with_test.go
             logger/config_test.go
             logger/level_test.go
