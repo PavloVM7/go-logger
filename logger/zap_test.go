@@ -71,12 +71,7 @@ func TestZapLogger_With_JSON(t *testing.T) {
 
 			tt.logFn(l)
 
-			closeErr := l.Close()
-			if closeErr != nil &&
-				!strings.Contains(closeErr.Error(), "bad file descriptor") &&
-				!strings.Contains(closeErr.Error(), "stdout") {
-				require.NoError(t, closeErr)
-			}
+			checkCloseError(t, l.Close())
 
 			output := readLogFile(t, logFile)
 			if len(output) > 0 {
@@ -173,11 +168,7 @@ func TestZapLogger_With_Console(t *testing.T) {
 
 			tt.logFn(l)
 
-			closeErr := l.Close()
-			if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-				require.NoError(t, closeErr)
-			}
-
+			checkCloseError(t, l.Close())
 			output := readLogFile(t, logFile)
 			if len(output) > 0 {
 				require.NoError(t, os.Remove(logFile))
@@ -269,11 +260,7 @@ func TestZapLogger_LevelFiltering(t *testing.T) {
 
 			tt.logFn(l)
 
-			closeErr := l.Close()
-			if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-				require.NoError(t, closeErr)
-			}
-
+			checkCloseError(t, l.Close())
 			output := readLogFile(t, logFile)
 			if len(output) > 0 {
 				require.NoError(t, os.Remove(logFile))
@@ -610,10 +597,7 @@ func TestZapLogger_ZapLevelMapping(t *testing.T) {
 				tt.unexpectedLogFn(l)
 			}
 
-			closeErr := l.Close()
-			if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-				require.NoError(t, closeErr)
-			}
+			checkCloseError(t, l.Close())
 
 			output := readLogFile(t, logFile)
 			require.NoError(t, os.Remove(logFile))
@@ -621,4 +605,13 @@ func TestZapLogger_ZapLevelMapping(t *testing.T) {
 			require.Contains(t, output[0], message)
 		})
 	}
+}
+
+func checkCloseError(t *testing.T, err error) {
+	if err != nil &&
+		!strings.Contains(err.Error(), "bad file descriptor") &&
+		!strings.Contains(err.Error(), "stdout") {
+		require.NoError(t, err)
+	}
+
 }
