@@ -291,11 +291,7 @@ func TestZapLogger_DefaultDateFormat(t *testing.T) {
 
 	l.Infow("test message")
 
-	closeErr := l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr)
-	}
-
+	checkCloseError(t, l.Close())
 	output := readLogFile(t, logFile)
 	if len(output) > 0 {
 		require.NoError(t, os.Remove(logFile))
@@ -330,11 +326,7 @@ func TestZapLogger_Name(t *testing.T) {
 
 	l.Infow("test message")
 
-	closeErr := l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr)
-	}
-
+	checkCloseError(t, l.Close())
 	output := readLogFile(t, logFile)
 	if len(output) > 0 {
 		require.NoError(t, os.Remove(logFile))
@@ -366,11 +358,7 @@ func TestZapLogger_EmptyName(t *testing.T) {
 
 	l.Infow("test message")
 
-	closeErr := l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr)
-	}
-
+	checkCloseError(t, l.Close())
 	output := readLogFile(t, logFile)
 	if len(output) > 0 {
 		require.NoError(t, os.Remove(logFile))
@@ -408,11 +396,7 @@ func TestZapLogger_MultipleOutputs(t *testing.T) {
 
 	l.Infow(message)
 
-	closeErr := l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr)
-	}
-
+	checkCloseError(t, l.Close())
 	for _, output := range config.Outputs {
 		fileOutput := readLogFile(t, output)
 		if len(fileOutput) > 0 {
@@ -439,15 +423,7 @@ func TestZapLogger_Close(t *testing.T) {
 
 	l.Infow("test message")
 
-	closeErr := l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr)
-	}
-
-	closeErr = l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr, "closing already closed logger should not error")
-	}
+	checkCloseError(t, l.Close())
 
 	output := readLogFile(t, logFile)
 	if len(output) > 0 {
@@ -472,11 +448,7 @@ func TestZapLogger_InvalidLevel(t *testing.T) {
 
 	l.Infow("test message")
 
-	closeErr := l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr)
-	}
-
+	checkCloseError(t, l.Close())
 	output := readLogFile(t, logFile)
 	if len(output) > 0 {
 		require.NoError(t, os.Remove(logFile))
@@ -530,11 +502,7 @@ func TestZapLogger_ContextIntegration(t *testing.T) {
 
 	retrievedLogger.Infow("test message")
 
-	closeErr := l.Close()
-	if closeErr != nil && !strings.Contains(closeErr.Error(), "bad file descriptor") {
-		require.NoError(t, closeErr)
-	}
-
+	checkCloseError(t, l.Close())
 	output := readLogFile(t, logFile)
 	if len(output) > 0 {
 		require.NoError(t, os.Remove(logFile))
