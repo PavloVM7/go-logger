@@ -61,7 +61,7 @@ func TestSlogLogger_With_JSON(t *testing.T) {
 		Name:       "test-logger",
 		Level:      "debug",
 		DateFormat: dateFormat,
-		Outputs:    []string{"stdout", "../tests/data/tmp/slog-logger.log"},
+		Outputs:    []string{"stdout", getFullOutputFileName("slog-logger.log")},
 	}
 
 	t.Run("JSON handler", func(t *testing.T) {
@@ -132,9 +132,8 @@ func readLogFile(t *testing.T, fileName string) []string {
 	return res
 }
 
-func getOutputFileName() string {
-	fn := time.Now().Format("2006-01-02T15-04-05-000") + ".log"
-	return path.Join("../tests/data/tmp", fn)
+func getFullOutputFileName(fileName string) string {
+	return path.Join("../tests/data/tmp", fileName)
 }
 
 func captureOutput(f func()) string {

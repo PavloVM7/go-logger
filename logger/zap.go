@@ -17,6 +17,7 @@ func newZapConfig(cfg Config) zap.Config {
 		Level:      cfg.Level,
 		DateFormat: cfg.DateFormat,
 		Encoding:   internal.EncodingFromString(cfg.Encoding),
+		Outputs:    cfg.Outputs,
 	}
 	if len(result.DateFormat) == 0 {
 		result.DateFormat = defaultDateFormat
