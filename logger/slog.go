@@ -1,62 +1,33 @@
 package logger
 
 import (
-	"io"
-	logslog "log/slog"
-
+	"github.com/PavloVM7/go-logger/internal"
 	"github.com/PavloVM7/go-logger/internal/slog"
 )
 
-func loggerLevelToSlogLevel(level Level) logslog.Level {
-	switch level {
-	case DebugLevel:
-		return logslog.LevelDebug
-	case InfoLevel:
-		return logslog.LevelInfo
-	case WarnLevel:
-		return logslog.LevelWarn
-	case ErrorLevel:
-		return logslog.LevelError
-	case FatalLevel:
-		return slog.LevelFatal
-	default:
-		return logslog.Level(level)
-	}
-}
-
-// NewLoggerSlogJSON creates a new slog-based logger with JSON formatting.
-func NewLoggerSlogJSON(cfg Config) (Logger, error) {
-	c, err := newSlogConfig(cfg, nil)
+// NewLoggerSlog creates a new slog-based logger with JSON formatting.
+func NewLoggerSlog(cfg Config) (Logger, error) {
+	c, err := newSlogConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	return newWrapperJSON(c), nil
+	return newWrapper(c)
+}
+func newWrapper(c slog.Config) (Logger, error) {
+	return slog.NewWrapper(c)
 }
 
-func newWrapperJSON(c slog.Config) Logger {
-	return slog.NewWrapperJSON(c)
-}
-
-// NewLoggerSlogText creates a new slog-based logger with text formatting.
-func NewLoggerSlogText(cfg Config) (Logger, error) {
-	c, err := newSlogConfig(cfg, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return slog.NewWrapperText(c), nil
-}
-
-func newSlogConfig(cfg Config, w io.Writer) (slog.Config, error) {
-	level, err := cfg.GetLevel()
+func newSlogConfig(cfg Config) (slog.Config, error) {
+	stringLevel, err := cfg.levelToString()
 	if err != nil {
 		return slog.Config{}, err
 	}
 	result := slog.Config{
-		Level:      loggerLevelToSlogLevel(level),
+		Level:      stringLevel,
 		DateFormat: cfg.DateFormat,
-		W:          w,
+		Encoding:   internal.EncodingFromString(cfg.Encoding),
+		Outputs:    cfg.Outputs,
 	}
 	if len(result.DateFormat) == 0 {
 		result.DateFormat = defaultDateFormat

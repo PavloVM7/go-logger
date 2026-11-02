@@ -15,7 +15,7 @@ func init() {
 	osExit = func(code int) {}
 }
 
-func Test_JSON_Logger_With(t *testing.T) {
+func Test_Logger_With(t *testing.T) {
 	const (
 		message    = "log message"
 		key1       = "key1"
@@ -71,11 +71,12 @@ func Test_JSON_Logger_With(t *testing.T) {
 				buf := bytes.Buffer{}
 				opt := optFn()
 				h := newJSONHandler(&buf, &opt, dateFormat)
-				l := newSlogWrapper(h)
+				l, err := newSlogWrapper(h, nil)
+				require.NoError(t, err)
 				tt.logFn(l)
 
 				mp := make(map[string]any)
-				err := json.Unmarshal(buf.Bytes(), &mp)
+				err = json.Unmarshal(buf.Bytes(), &mp)
 				require.NoError(t, err)
 
 				level, ok := mp[logslog.LevelKey].(string)
@@ -106,22 +107,32 @@ func Test_JSON_Logger_With(t *testing.T) {
 			})
 		}
 	})
+
 	t.Run("text handler", func(t *testing.T) {
 		for _, tt := range tests {
 			buf := bytes.Buffer{}
 			opt := optFn()
 			h := newTextHandler(&buf, &opt, dateFormat)
-			l := newSlogWrapper(h)
+			l, err := newSlogWrapper(h, nil)
+			require.NoError(t, err)
 			tt.logFn(l)
 
-			sub := buf.String()[0:len(dateFormat)]
-			_, err := time.Parse(dateFormat, sub)
+			output := buf.String()
+			t.Log("text:", output)
+
+			sub := output[0:len(dateFormat)]
+			_, err = time.Parse(dateFormat, sub)
 			require.NoError(t, err)
 			_, err = time.Parse(time.DateOnly, sub)
 			require.Error(t, err)
 
-			output := buf.String()
 			require.Contains(t, output, tt.abbrev, "output should contain abbreviated level")
+			require.Contains(t, output, message, "output should contain log message")
+
+			require.Contains(t, output, "key1=\"value 1\"")
+			require.Contains(t, output, "key2=123")
+			require.Contains(t, output, "key3=true")
+			require.Contains(t, output, "key4=7h0m0s")
 		}
 
 	})

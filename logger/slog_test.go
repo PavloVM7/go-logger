@@ -3,7 +3,12 @@ package logger
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	logslog "log/slog"
+	"os"
+	"path"
+	"strings"
 	"testing"
 	"time"
 
@@ -56,17 +61,33 @@ func TestSlogLogger_With_JSON(t *testing.T) {
 		Name:       "test-logger",
 		Level:      "debug",
 		DateFormat: dateFormat,
+		Outputs:    []string{"stdout", getFullOutputFileName("slog-logger.log")},
 	}
+
 	t.Run("JSON handler", func(t *testing.T) {
+		config.Encoding = "json"
+		_ = os.Remove(config.Outputs[1])
+
+		defer func() {
+			_ = os.Remove(config.Outputs[1])
+		}()
+
 		for _, tt := range tests {
-			buf := bytes.Buffer{}
-			cfg, err := newSlogConfig(config, &buf)
+			cfg, err := newSlogConfig(config)
 			require.NoError(t, err)
-			l := newWrapperJSON(cfg)
+			l, err := newWrapper(cfg)
+			require.NoError(t, err)
+
 			tt.logFn(l)
 
+			require.NoError(t, l.Close())
+
+			output := readLogFile(t, config.Outputs[1])
+			require.NoError(t, os.Remove(config.Outputs[1]))
+			require.Len(t, output, 1)
+
 			mp := make(map[string]any)
-			err = json.Unmarshal(buf.Bytes(), &mp)
+			err = json.Unmarshal([]byte(output[0]), &mp)
 			require.NoError(t, err)
 
 			level, ok := mp[logslog.LevelKey].(string)
@@ -96,4 +117,42 @@ func TestSlogLogger_With_JSON(t *testing.T) {
 			assert.Equal(t, val4, time.Duration(f64))
 		}
 	})
+}
+
+func readLogFile(t *testing.T, fileName string) []string {
+	t.Helper()
+
+	bts, err := os.ReadFile(fileName)
+	require.NoError(t, err)
+
+	res := strings.Split(string(bts), "\n")
+	if len(res) > 0 && res[len(res)-1] == "" {
+		res = res[:len(res)-1]
+	}
+	return res
+}
+
+func getFullOutputFileName(fileName string) string {
+	return path.Join("../tests/data/tmp", fileName)
+}
+
+func captureOutput(f func()) string {
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	outC := make(chan string)
+	go func() {
+		var buf bytes.Buffer
+		if _, err := io.Copy(&buf, r); err != nil {
+			fmt.Print("copy err:", err)
+		}
+		outC <- buf.String()
+	}()
+
+	f()
+
+	_ = w.Close()
+	os.Stdout = oldStdout
+	return <-outC
 }

@@ -4,45 +4,10 @@ package slog
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	logslog "log/slog"
 	"time"
 )
-
-func levelStringToShortString(levelStr string) logslog.Level {
-	switch levelStr {
-	case "DEBUG", "debug":
-		return logslog.LevelDebug
-	case "INFO", "info":
-		return logslog.LevelInfo
-	case "WARN", "warn":
-		return logslog.LevelWarn
-	case "ERROR", "error":
-		return logslog.LevelError
-	case "FATAL", "fatal", "12", "ERROR+4":
-		return LevelFatal
-	default:
-		return logslog.LevelDebug - 4
-	}
-}
-
-func levelToShortString(level logslog.Level) string {
-	switch level {
-	case logslog.LevelDebug:
-		return "DBG"
-	case logslog.LevelInfo:
-		return "INF"
-	case logslog.LevelWarn:
-		return "WRN"
-	case logslog.LevelError:
-		return "ERR"
-	case LevelFatal:
-		return "FTL"
-	default:
-		return fmt.Sprintf("LVL%d", level)
-	}
-}
 
 // revive:disable:cognitive-complexity
 func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string) *logslog.JSONHandler {
@@ -52,21 +17,23 @@ func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string)
 
 	originalReplace := opt.ReplaceAttr
 	opt.ReplaceAttr = func(groups []string, a logslog.Attr) logslog.Attr {
-		if a.Key == logslog.TimeKey {
+		switch a.Key {
+		case logslog.TimeKey:
 			if tm, ok := a.Value.Any().(time.Time); ok {
 				a.Value = logslog.StringValue(tm.Format(dateFormat))
 				return a
 			}
+		case logslog.LevelKey:
+			if lvl, ok := a.Value.Any().(logslog.Level); ok {
+				a.Value = logslog.StringValue(levelToShortString(lvl))
+				return a
+			}
+		default:
+			if originalReplace != nil {
+				return originalReplace(groups, a)
+			}
 		}
-		if a.Key == logslog.LevelKey {
-			lvl := levelStringToShortString(a.Value.String())
-			a.Value = logslog.StringValue(levelToShortString(lvl))
-			return a
-		}
-		if originalReplace == nil {
-			return a
-		}
-		return originalReplace(groups, a)
+		return a
 	}
 
 	return logslog.NewJSONHandler(w, opt)

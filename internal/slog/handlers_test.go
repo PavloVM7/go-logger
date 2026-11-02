@@ -10,10 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	osExit = func(code int) {}
-}
-
 func TestDateFormat(t *testing.T) {
 	const dateFormat = "2006-01-02 15:04:05.000Z-07:00"
 	t.Run("JSON handler", func(t *testing.T) {
@@ -98,11 +94,19 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			jh := newJSONHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper := newSlogWrapper(jh)
+			wrapper, err := newSlogWrapper(jh, nil)
+			require.NoError(t, err)
+
+			originalExit := osExit
+			osExit = func(code int) {}
+			defer func() {
+				osExit = originalExit
+			}()
+
 			wrapper.Fatalw("fatal message", "key", "value")
 
 			mp := make(map[string]any)
-			err := json.Unmarshal(buf.Bytes(), &mp)
+			err = json.Unmarshal(buf.Bytes(), &mp)
 			require.NoError(t, err)
 			level, ok := mp[logslog.LevelKey].(string)
 			require.True(t, ok, "level key should exist in output")
@@ -113,7 +117,15 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			th := newTextHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper := newSlogWrapper(th)
+			wrapper, err := newSlogWrapper(th, nil)
+			require.NoError(t, err)
+
+			originalExit := osExit
+			osExit = func(code int) {}
+			defer func() {
+				osExit = originalExit
+			}()
+
 			wrapper.Fatalw("fatal message", "key", "value")
 
 			output := buf.String()

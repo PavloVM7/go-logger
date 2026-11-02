@@ -5,6 +5,7 @@ import "context"
 // Logger defines the interface for a structured logger.
 type Logger interface {
 	LoggerWith
+	Close() error
 }
 
 // LoggerWith defines the logging methods with structured key-value pairs.
