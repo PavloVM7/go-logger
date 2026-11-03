@@ -119,7 +119,6 @@ func Test_Logger_With(t *testing.T) {
 			tt.logFn(l)
 
 			output := buf.String()
-			t.Log("text:", output)
 
 			sub := output[0:len(dateFormat)]
 			_, err = time.Parse(dateFormat, sub)

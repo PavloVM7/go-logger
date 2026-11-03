@@ -19,7 +19,7 @@ const nameKeyName = "logger"
 
 // NewWrapper returns a new slog wrapper with JSON formatting.
 // revive:disable:unexported-return
-func NewWrapper(cfg Config) (internal.Logger, error) {
+func NewWrapper(cfg Config) (*slogWrapper, error) {
 	cfg.check()
 	opt := cfg.createHandlerOptions()
 	writers, err := cfg.createWriters()
@@ -41,7 +41,7 @@ func NewWrapper(cfg Config) (internal.Logger, error) {
 	return newSlogWrapper(h, writers)
 }
 
-func newSlogWrapper(h logslog.Handler, writers []io.Writer) (internal.Logger, error) {
+func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error) {
 	if h == nil {
 		return nil, errors.New("a handler couldn't be nil")
 	}

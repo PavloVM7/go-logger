@@ -49,7 +49,6 @@ func TestWith(t *testing.T) {
 
 		strs := parseBuf(t, &buf)
 		require.Len(t, strs, 2)
-		t.Log("strs:", strs)
 
 		map1 := make(map[string]any)
 		map2 := make(map[string]any)
