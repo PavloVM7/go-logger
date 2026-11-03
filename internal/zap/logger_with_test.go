@@ -117,37 +117,39 @@ func Test_Logger_With(t *testing.T) {
 		cfg.Encoding = internal.ConsoleEncoding
 
 		for _, tt := range tests {
-			buf := bytes.Buffer{}
-			l := newLogger(t, cfg, &buf)
-			tt.logFn(l)
-			_ = l.Close()
+			t.Run(tt.name, func(t *testing.T) {
+				buf := bytes.Buffer{}
+				l := newLogger(t, cfg, &buf)
+				tt.logFn(l)
+				_ = l.Close()
 
-			sub := buf.String()[0:len(dateFormat)]
-			_, err := time.Parse(dateFormat, sub)
-			require.NoError(t, err)
-			_, err = time.Parse(time.DateOnly, sub)
-			require.Error(t, err)
+				sub := buf.String()[0:len(dateFormat)]
+				_, err := time.Parse(dateFormat, sub)
+				require.NoError(t, err)
+				_, err = time.Parse(time.DateOnly, sub)
+				require.Error(t, err)
 
-			output := buf.String()
-			require.Contains(t, output, tt.abbrev, "output should contain abbreviated level")
-			require.Contains(t, output, message, "output should contain log message")
+				output := buf.String()
+				require.Contains(t, output, tt.abbrev, "output should contain abbreviated level")
+				require.Contains(t, output, message, "output should contain log message")
 
-			sub = getJson(t, output)
-			mp := jsonToMap(t, []byte(sub))
+				sub = getJson(t, output)
+				mp := jsonToMap(t, []byte(sub))
 
-			assert.Equal(t, val1, mp[key1])
+				assert.Equal(t, val1, mp[key1])
 
-			f64, ok := mp[key2].(float64)
-			require.True(t, ok)
-			assert.Equal(t, val2, int(f64))
+				f64, ok := mp[key2].(float64)
+				require.True(t, ok)
+				assert.Equal(t, val2, int(f64))
 
-			assert.Equal(t, val3, mp[key3])
+				assert.Equal(t, val3, mp[key3])
 
-			ds, ok := mp[key4].(string)
-			require.True(t, ok)
-			dur, err := time.ParseDuration(ds)
-			require.NoError(t, err)
-			assert.Equal(t, val4, dur)
+				ds, ok := mp[key4].(string)
+				require.True(t, ok)
+				dur, err := time.ParseDuration(ds)
+				require.NoError(t, err)
+				assert.Equal(t, val4, dur)
+			})
 		}
 	})
 }

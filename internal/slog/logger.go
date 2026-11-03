@@ -82,6 +82,37 @@ func (l *slogWrapper) With(keysAndValues ...any) internal.Logger {
 	}
 }
 
+func (l *slogWrapper) Fatalf(format string, args ...any) {
+	l.lg.Log(l.ctx, LevelFatal, fmt.Sprintf(format, args...))
+	_ = l.Close()
+	osExit(1)
+}
+func (l *slogWrapper) Errorf(format string, args ...any) {
+	if !l.IsLoggingLevelError() {
+		return
+	}
+	l.lg.Log(l.ctx, logslog.LevelError, fmt.Sprintf(format, args...))
+}
+func (l *slogWrapper) Warnf(format string, args ...any) {
+	if !l.IsLoggingLevelWarn() {
+		return
+	}
+	l.lg.Log(l.ctx, logslog.LevelWarn, fmt.Sprintf(format, args...))
+}
+func (l *slogWrapper) Infof(format string, args ...any) {
+	if !l.IsLoggingLevelInfo() {
+		return
+	}
+	l.lg.Log(l.ctx, logslog.LevelInfo, fmt.Sprintf(format, args...))
+}
+
+func (l *slogWrapper) Debugf(format string, args ...any) {
+	if !l.IsLoggingLevelDebug() {
+		return
+	}
+	l.lg.Log(l.ctx, logslog.LevelDebug, fmt.Sprintf(format, args...))
+}
+
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, LevelFatal, msg, keysAndValues...)
 	_ = l.Close()
@@ -98,6 +129,19 @@ func (l *slogWrapper) Infow(msg string, keysAndValues ...any) {
 }
 func (l *slogWrapper) Debugw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, logslog.LevelDebug, msg, keysAndValues...)
+}
+
+func (l *slogWrapper) IsLoggingLevelDebug() bool {
+	return l.lg.Enabled(l.ctx, logslog.LevelDebug)
+}
+func (l *slogWrapper) IsLoggingLevelInfo() bool {
+	return l.lg.Enabled(l.ctx, logslog.LevelInfo)
+}
+func (l *slogWrapper) IsLoggingLevelWarn() bool {
+	return l.lg.Enabled(l.ctx, logslog.LevelWarn)
+}
+func (l *slogWrapper) IsLoggingLevelError() bool {
+	return l.lg.Enabled(l.ctx, logslog.LevelError)
 }
 
 // Close closes all closable writers (excluding stdout, stderr, stdin).

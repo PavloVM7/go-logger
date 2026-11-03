@@ -57,9 +57,23 @@ type ConfigBase struct {
 
 // Logger defines the interface for a structured logger.
 type Logger interface {
+	LoggerFmt
 	LoggerWith
 	With(keysAndValues ...any) Logger
+	IsLoggingLevelDebug() bool
+	IsLoggingLevelInfo() bool
+	IsLoggingLevelWarn() bool
+	IsLoggingLevelError() bool
 	Close() error
+}
+
+// LoggerFmt defines the formatted logging methods.
+type LoggerFmt interface {
+	Fatalf(format string, args ...any)
+	Errorf(format string, args ...any)
+	Warnf(format string, args ...any)
+	Infof(format string, args ...any)
+	Debugf(format string, args ...any)
 }
 
 // LoggerWith defines the logging methods with structured key-value pairs.

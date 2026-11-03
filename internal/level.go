@@ -79,3 +79,20 @@ func (lk LevelKind) ToShortString() string {
 	}
 	return fmt.Sprintf("LVL%d", lk)
 }
+
+func (lk LevelKind) String() string {
+	switch lk {
+	case LevelKindDebug:
+		return "debug"
+	case LevelKindInfo:
+		return "info"
+	case LevelKindWarn:
+		return "warn"
+	case LevelKindError:
+		return "error"
+	case LevelKindFatal:
+		return "fatal"
+	default:
+		return fmt.Sprintf("Level(%d)", lk)
+	}
+}

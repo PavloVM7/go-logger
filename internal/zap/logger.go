@@ -40,3 +40,16 @@ func (l *zapLogger) With(keysAndValues ...any) internal.Logger {
 		SugaredLogger: l.SugaredLogger.With(keysAndValues...),
 	}
 }
+
+func (l *zapLogger) IsLoggingLevelDebug() bool {
+	return l.SugaredLogger.Level() <= zap.DebugLevel
+}
+func (l *zapLogger) IsLoggingLevelInfo() bool {
+	return l.SugaredLogger.Level() <= zap.InfoLevel
+}
+func (l *zapLogger) IsLoggingLevelWarn() bool {
+	return l.SugaredLogger.Level() <= zap.WarnLevel
+}
+func (l *zapLogger) IsLoggingLevelError() bool {
+	return l.SugaredLogger.Level() <= zap.ErrorLevel
+}
