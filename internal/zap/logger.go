@@ -1,6 +1,7 @@
 package zap
 
 import (
+	"github.com/PavloVM7/go-logger/internal"
 	"go.uber.org/zap"
 )
 
@@ -32,4 +33,10 @@ type zapLogger struct {
 
 func (l *zapLogger) Close() error {
 	return l.Sync()
+}
+
+func (l *zapLogger) With(keysAndValues ...any) internal.Logger {
+	return &zapLogger{
+		SugaredLogger: l.SugaredLogger.With(keysAndValues...),
+	}
 }

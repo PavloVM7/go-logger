@@ -15,6 +15,8 @@ import (
 
 var osExit = os.Exit
 
+const nameKeyName = "logger"
+
 // NewWrapper returns a new slog wrapper with JSON formatting.
 // revive:disable:unexported-return
 func NewWrapper(cfg Config) (*slogWrapper, error) {
@@ -72,6 +74,14 @@ func (l *slogWrapper) addWriter(w io.Writer) bool {
 	return true
 }
 
+func (l *slogWrapper) With(keysAndValues ...any) internal.Logger {
+	return &slogWrapper{
+		ctx:     l.ctx,
+		lg:      l.lg.With(keysAndValues...),
+		writers: slices.Clone(l.writers),
+	}
+}
+
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, LevelFatal, msg, keysAndValues...)
 	_ = l.Close()
@@ -109,7 +119,7 @@ func (l *slogWrapper) closeWriters() error {
 			continue
 		}
 		if cl, ok := w.(closable); ok {
-			if err := cl.Close(); err != nil {
+			if err := cl.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
 				errs = append(errs, fmt.Errorf("failed to close writer %T: %w", w, err))
 			}
 		}

@@ -1,22 +1,13 @@
 package logger
 
-import "context"
+import (
+	"context"
 
-// Logger defines the interface for a structured logger.
-type Logger interface {
-	LoggerWith
-	Close() error
-}
+	"github.com/PavloVM7/go-logger/internal"
+)
 
-// LoggerWith defines the logging methods with structured key-value pairs.
-// revive:disable:exported
-type LoggerWith interface {
-	Fatalw(msg string, keysAndValues ...any)
-	Errorw(msg string, keysAndValues ...any)
-	Warnw(msg string, keysAndValues ...any)
-	Infow(msg string, keysAndValues ...any)
-	Debugw(msg string, keysAndValues ...any)
-}
+// Logger is a structured logger with context support and key-value logging methods.
+type Logger internal.Logger
 
 type loggerCtxKey struct{}
 

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PavloVM7/go-logger/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,32 +37,32 @@ func Test_Logger_With(t *testing.T) {
 	tests := []struct {
 		name   string
 		abbrev string
-		logFn  func(*slogWrapper)
+		logFn  func(internal.Logger)
 	}{
 		{
 			name:   "debugw",
 			abbrev: "DBG",
-			logFn:  func(sw *slogWrapper) { sw.Debugw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
+			logFn:  func(sw internal.Logger) { sw.Debugw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
 		},
 		{
 			name:   "infow",
 			abbrev: "INF",
-			logFn:  func(sw *slogWrapper) { sw.Infow(message, key1, val1, key2, val2, key3, val3, key4, val4) },
+			logFn:  func(sw internal.Logger) { sw.Infow(message, key1, val1, key2, val2, key3, val3, key4, val4) },
 		},
 		{
 			name:   "warnw",
 			abbrev: "WRN",
-			logFn:  func(sw *slogWrapper) { sw.Warnw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
+			logFn:  func(sw internal.Logger) { sw.Warnw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
 		},
 		{
 			name:   "errorw",
 			abbrev: "ERR",
-			logFn:  func(sw *slogWrapper) { sw.Errorw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
+			logFn:  func(sw internal.Logger) { sw.Errorw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
 		},
 		{
 			name:   "fatalw",
 			abbrev: "FTL",
-			logFn:  func(sw *slogWrapper) { sw.Fatalw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
+			logFn:  func(sw internal.Logger) { sw.Fatalw(message, key1, val1, key2, val2, key3, val3, key4, val4) },
 		},
 	}
 
@@ -118,7 +119,6 @@ func Test_Logger_With(t *testing.T) {
 			tt.logFn(l)
 
 			output := buf.String()
-			t.Log("text:", output)
 
 			sub := output[0:len(dateFormat)]
 			_, err = time.Parse(dateFormat, sub)
