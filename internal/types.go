@@ -54,3 +54,20 @@ type ConfigBase struct {
 	Encoding Encoding
 	Outputs  []string
 }
+
+// Logger defines the interface for a structured logger.
+type Logger interface {
+	LoggerWith
+	With(keysAndValues ...any) Logger
+	Close() error
+}
+
+// LoggerWith defines the logging methods with structured key-value pairs.
+// revive:disable:exported
+type LoggerWith interface {
+	Fatalw(msg string, keysAndValues ...any)
+	Errorw(msg string, keysAndValues ...any)
+	Warnw(msg string, keysAndValues ...any)
+	Infow(msg string, keysAndValues ...any)
+	Debugw(msg string, keysAndValues ...any)
+}

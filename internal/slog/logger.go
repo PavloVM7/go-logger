@@ -15,9 +15,11 @@ import (
 
 var osExit = os.Exit
 
+const nameKeyName = "logger"
+
 // NewWrapper returns a new slog wrapper with JSON formatting.
 // revive:disable:unexported-return
-func NewWrapper(cfg Config) (*slogWrapper, error) {
+func NewWrapper(cfg Config) (internal.Logger, error) {
 	cfg.check()
 	opt := cfg.createHandlerOptions()
 	writers, err := cfg.createWriters()
@@ -39,7 +41,7 @@ func NewWrapper(cfg Config) (*slogWrapper, error) {
 	return newSlogWrapper(h, writers)
 }
 
-func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error) {
+func newSlogWrapper(h logslog.Handler, writers []io.Writer) (internal.Logger, error) {
 	if h == nil {
 		return nil, errors.New("a handler couldn't be nil")
 	}
@@ -70,6 +72,14 @@ func (l *slogWrapper) addWriter(w io.Writer) bool {
 	l.writers = append(l.writers, w)
 	l.writers = slices.Clip(l.writers)
 	return true
+}
+
+func (l *slogWrapper) With(keysAndValues ...any) internal.Logger {
+	return &slogWrapper{
+		ctx:     l.ctx,
+		lg:      l.lg.With(keysAndValues...),
+		writers: slices.Clone(l.writers),
+	}
 }
 
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
@@ -109,7 +119,7 @@ func (l *slogWrapper) closeWriters() error {
 			continue
 		}
 		if cl, ok := w.(closable); ok {
-			if err := cl.Close(); err != nil {
+			if err := cl.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
 				errs = append(errs, fmt.Errorf("failed to close writer %T: %w", w, err))
 			}
 		}
