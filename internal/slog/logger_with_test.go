@@ -12,10 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	osExit = func(code int) {}
-}
-
 func Test_Logger_With(t *testing.T) {
 	const (
 		message    = "log message"
@@ -69,6 +65,11 @@ func Test_Logger_With(t *testing.T) {
 	t.Run("JSON handler", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
+				oldExit := osExit
+				osExit = func(code int) {}
+				defer func() {
+					osExit = oldExit
+				}()
 				buf := bytes.Buffer{}
 				opt := optFn()
 				h := newJSONHandler(&buf, &opt, dateFormat)
@@ -111,6 +112,12 @@ func Test_Logger_With(t *testing.T) {
 
 	t.Run("text handler", func(t *testing.T) {
 		for _, tt := range tests {
+			oldExit := osExit
+			osExit = func(code int) {}
+			defer func() {
+				osExit = oldExit
+			}()
+
 			buf := bytes.Buffer{}
 			opt := optFn()
 			h := newTextHandler(&buf, &opt, dateFormat)

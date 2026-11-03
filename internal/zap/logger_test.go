@@ -14,6 +14,98 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestEnabled(t *testing.T) {
+	type loggerBoolFunc func(*zapLogger) bool
+	tests := []struct {
+		level  internal.LevelKind
+		trues  []loggerBoolFunc
+		falses []loggerBoolFunc
+	}{
+		{
+			level: internal.LevelKindDebug,
+			trues: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelDebug() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelInfo() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelWarn() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
+			},
+			falses: nil,
+		},
+		{
+			level: internal.LevelKindInfo,
+			trues: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelInfo() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelWarn() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
+			},
+			falses: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelDebug() },
+			},
+		},
+		{
+			level: internal.LevelKindWarn,
+			trues: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelWarn() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
+			},
+			falses: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelDebug() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelInfo() },
+			},
+		},
+		{
+			level: internal.LevelKindError,
+			trues: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
+			},
+			falses: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelDebug() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelInfo() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelWarn() },
+			},
+		},
+		{
+			level: internal.LevelKindFatal,
+			trues: nil,
+			falses: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelDebug() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelInfo() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelWarn() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
+			},
+		},
+		{
+			level: internal.LevelKind(99),
+			trues: []loggerBoolFunc{
+				func(l *zapLogger) bool { return l.IsLoggingLevelDebug() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelInfo() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelWarn() },
+				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
+			},
+			falses: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.level.String(), func(t *testing.T) {
+			cfg := Config{
+				Name:       "test-logger",
+				Level:      tt.level.String(),
+				DateFormat: "2006-01-02T15:04:05.000Z-07:00",
+				Encoding:   internal.JSONEncoding,
+				Outputs:    []string{internal.OutputStdout},
+			}
+			l, err := NewWrapperZap(cfg)
+			require.NoError(t, err)
+			for i, f := range tt.trues {
+				assert.True(t, f(l), "%#q trues i=%d", tt.level.String(), i)
+			}
+			for i, f := range tt.falses {
+				assert.False(t, f(l), "%#q falses i=%d", tt.level.String(), i)
+			}
+		})
+	}
+}
+
 func TestWith(t *testing.T) {
 	const (
 		dateFormat = "2006-01-02T15:04:05.000Z-07:00"
