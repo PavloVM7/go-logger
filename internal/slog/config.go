@@ -56,6 +56,12 @@ func (c *Config) checkOutputs() {
 
 func (c *Config) check() {
 	c.checkOutputs()
+
+	name := strings.TrimSpace(c.Name)
+	if len(name) == 0 {
+		name = "default"
+	}
+	c.Name = name
 }
 
 func (c *Config) createHandlerOptions() logslog.HandlerOptions {

@@ -40,7 +40,14 @@ func (l *zapLogger) With(keysAndValues ...any) internal.Logger {
 		SugaredLogger: l.SugaredLogger.With(keysAndValues...),
 	}
 }
-
+func (l *zapLogger) Named(name string) internal.Logger {
+	return &zapLogger{
+		SugaredLogger: l.SugaredLogger.Named(name),
+	}
+}
+func (l *zapLogger) Name() string {
+	return l.SugaredLogger.Desugar().Name()
+}
 func (l *zapLogger) IsLoggingLevelDebug() bool {
 	return l.SugaredLogger.Level() <= zap.DebugLevel
 }

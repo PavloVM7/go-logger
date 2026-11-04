@@ -59,6 +59,8 @@ type ConfigBase struct {
 type Logger interface {
 	LoggerFmt
 	LoggerWith
+	Named(name string) Logger
+	Name() string
 	With(keysAndValues ...any) Logger
 	IsLoggingLevelDebug() bool
 	IsLoggingLevelInfo() bool

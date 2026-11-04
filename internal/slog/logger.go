@@ -15,8 +15,6 @@ import (
 
 var osExit = os.Exit
 
-const nameKeyName = "logger"
-
 // NewWrapper returns a new slog wrapper with JSON formatting.
 // revive:disable:unexported-return
 func NewWrapper(cfg Config) (*slogWrapper, error) {
@@ -33,9 +31,9 @@ func NewWrapper(cfg Config) (*slogWrapper, error) {
 	var h logslog.Handler
 	encoding := internal.EncodingFromString(cfg.Encoding.String())
 	if encoding == internal.JSONEncoding {
-		h = newJSONHandler(writer, &opt, cfg.DateFormat)
+		h = newNamedJSONHandler(writer, &opt, cfg.DateFormat).WithGroup(cfg.Name)
 	} else {
-		h = newTextHandler(writer, &opt, cfg.DateFormat)
+		h = newTextHandler(writer, &opt, cfg.DateFormat).WithGroup(cfg.Name)
 	}
 
 	return newSlogWrapper(h, writers)
@@ -47,9 +45,10 @@ func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error
 	}
 
 	return &slogWrapper{
-		ctx:     context.Background(),
-		lg:      logslog.New(h),
-		writers: writers,
+		ctx:       context.Background(),
+		lg:        logslog.New(h),
+		writers:   writers,
+		closeOnce: &sync.Once{},
 	}, nil
 }
 
@@ -57,7 +56,7 @@ type slogWrapper struct {
 	ctx       context.Context
 	lg        *logslog.Logger
 	writers   []io.Writer
-	closeOnce sync.Once
+	closeOnce *sync.Once
 }
 
 func (l *slogWrapper) addWriter(w io.Writer) bool {
@@ -76,9 +75,10 @@ func (l *slogWrapper) addWriter(w io.Writer) bool {
 
 func (l *slogWrapper) With(keysAndValues ...any) internal.Logger {
 	return &slogWrapper{
-		ctx:     l.ctx,
-		lg:      l.lg.With(keysAndValues...),
-		writers: slices.Clone(l.writers),
+		ctx:       l.ctx,
+		lg:        l.lg.With(keysAndValues...),
+		writers:   l.writers,
+		closeOnce: l.closeOnce,
 	}
 }
 
@@ -142,6 +142,23 @@ func (l *slogWrapper) IsLoggingLevelWarn() bool {
 }
 func (l *slogWrapper) IsLoggingLevelError() bool {
 	return l.lg.Enabled(l.ctx, logslog.LevelError)
+}
+
+func (l *slogWrapper) Named(name string) internal.Logger {
+	return &slogWrapper{
+		ctx:       l.ctx,
+		lg:        l.lg.WithGroup(name),
+		writers:   l.writers,
+		closeOnce: l.closeOnce,
+	}
+}
+
+func (l *slogWrapper) Name() string {
+	if nh, ok := l.lg.Handler().(iNamedHandler); ok {
+		nh.Name()
+	}
+
+	return "invalid logger type: failed to convert logger type to named handler"
 }
 
 // Close closes all closable writers (excluding stdout, stderr, stdin).
