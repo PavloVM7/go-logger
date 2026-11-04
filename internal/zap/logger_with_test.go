@@ -69,7 +69,8 @@ func Test_Logger_With(t *testing.T) {
 
 	t.Run("JSON", func(t *testing.T) {
 		cfg.Encoding = internal.JSONEncoding
-		conf := newConfig(cfg)
+		conf, err := newConfig(cfg)
+		require.NoError(t, err)
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -173,7 +174,8 @@ func getJson(t *testing.T, src string) string {
 
 func newLogger(t *testing.T, cfg Config, w io.Writer) *zapLogger {
 	cfg.check()
-	conf := newConfig(cfg)
+	conf, err := newConfig(cfg)
+	require.NoError(t, err)
 
 	writeSyncer := zapcore.AddSync(w)
 

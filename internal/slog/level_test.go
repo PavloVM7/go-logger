@@ -7,6 +7,7 @@ import (
 
 	"github.com/PavloVM7/go-logger/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFromSlogLevel(t *testing.T) {
@@ -86,16 +87,12 @@ func TestLevelKind_kindLevelToSlogLevel(t *testing.T) {
 			kind: internal.LevelKindFatal,
 			want: logslog.Level(12),
 		},
-		{
-			name: "unknown defaults to info",
-			kind: internal.LevelKind(99),
-			want: logslog.LevelInfo,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := kindLevelToSlogLevel(tt.kind)
+			got, err := kindLevelToSlogLevel(tt.kind)
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

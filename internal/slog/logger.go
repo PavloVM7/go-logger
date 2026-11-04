@@ -19,7 +19,10 @@ var osExit = os.Exit
 // revive:disable:unexported-return
 func NewWrapper(cfg Config) (*slogWrapper, error) {
 	cfg.check()
-	opt := cfg.createHandlerOptions()
+	opt, err := cfg.createHandlerOptions()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create slog wrapper: %w", err)
+	}
 	writers, err := cfg.createWriters()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create slog wrapper: %w", err)
@@ -155,7 +158,7 @@ func (l *slogWrapper) Named(name string) internal.Logger {
 
 func (l *slogWrapper) Name() string {
 	if nh, ok := l.lg.Handler().(iNamedHandler); ok {
-		nh.Name()
+		return nh.Name()
 	}
 
 	return "invalid logger type: failed to convert logger type to named handler"
@@ -204,10 +207,6 @@ func closeWriters(writers []io.Writer) {
 
 type closable interface {
 	Close() error
-}
-
-type flusher interface {
-	Flush() error
 }
 
 func closeClosable(cl closable) {

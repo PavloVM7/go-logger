@@ -14,7 +14,10 @@ func NewWrapperZap(cfg Config) (*zapLogger, error) {
 func newZapLogger(cfg Config, opt ...zap.Option) (*zapLogger, error) {
 	cfg.check()
 
-	conf := newConfig(cfg)
+	conf, err := newConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
 	zl, err := conf.Build(opt...)
 	if err != nil {
 		return nil, err

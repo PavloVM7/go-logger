@@ -74,16 +74,6 @@ func TestEnabled(t *testing.T) {
 				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
 			},
 		},
-		{
-			level: internal.LevelKind(99),
-			trues: []loggerBoolFunc{
-				func(l *zapLogger) bool { return l.IsLoggingLevelDebug() },
-				func(l *zapLogger) bool { return l.IsLoggingLevelInfo() },
-				func(l *zapLogger) bool { return l.IsLoggingLevelWarn() },
-				func(l *zapLogger) bool { return l.IsLoggingLevelError() },
-			},
-			falses: nil,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.level.String(), func(t *testing.T) {

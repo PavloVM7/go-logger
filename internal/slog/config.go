@@ -64,17 +64,16 @@ func (c *Config) check() {
 	c.Name = name
 }
 
-func (c *Config) createHandlerOptions() logslog.HandlerOptions {
+func (c *Config) createHandlerOptions() (logslog.HandlerOptions, error) {
 	level, err := stringToLevel(c.Level)
 	if err != nil {
-		fmt.Printf("slog config error: %v", err)
-		level = logslog.LevelDebug
+		return logslog.HandlerOptions{}, fmt.Errorf("slog config error: %v", err)
 	}
 
 	return logslog.HandlerOptions{
 		Level:     level,
 		AddSource: false,
-	}
+	}, nil
 }
 
 func (c *Config) createWriters() ([]io.Writer, error) {
