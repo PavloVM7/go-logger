@@ -16,7 +16,8 @@ import (
 // Config holds the configuration for a slog logger.
 type Config struct {
 	internal.ConfigBase
-	w io.Writer
+	AddSource bool
+	w         io.Writer
 }
 
 // AddStdoutOutput adds stdout to the logger outputs.
@@ -72,7 +73,7 @@ func (c *Config) createHandlerOptions() (logslog.HandlerOptions, error) {
 
 	return logslog.HandlerOptions{
 		Level:     level,
-		AddSource: false,
+		AddSource: c.AddSource,
 	}, nil
 }
 

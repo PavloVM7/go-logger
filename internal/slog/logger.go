@@ -91,28 +91,16 @@ func (l *slogWrapper) Fatalf(format string, args ...any) {
 	osExit(1)
 }
 func (l *slogWrapper) Errorf(format string, args ...any) {
-	if !l.IsLoggingLevelError() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelError, fmt.Sprintf(format, args...))
 }
 func (l *slogWrapper) Warnf(format string, args ...any) {
-	if !l.IsLoggingLevelWarn() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelWarn, fmt.Sprintf(format, args...))
 }
 func (l *slogWrapper) Infof(format string, args ...any) {
-	if !l.IsLoggingLevelInfo() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelInfo, fmt.Sprintf(format, args...))
 }
 
 func (l *slogWrapper) Debugf(format string, args ...any) {
-	if !l.IsLoggingLevelDebug() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelDebug, fmt.Sprintf(format, args...))
 }
 
