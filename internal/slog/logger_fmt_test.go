@@ -56,19 +56,15 @@ func Test_Logger_fmt(t *testing.T) {
 		},
 	}
 
+	logOpt := option{exitFunc: func(code int) {}}
+
 	t.Run("JSON", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				oldExit := osExit
-				osExit = func(code int) {}
-				defer func() {
-					osExit = oldExit
-				}()
-
 				buf := bytes.Buffer{}
 				opt := optFn()
 				h := newJSONHandler(&buf, &opt, dateFormat)
-				l, err := newSlogWrapper(h, nil)
+				l, err := newSlogWrapper(h, nil, &logOpt)
 				require.NoError(t, err)
 				tt.logFn(l)
 
@@ -95,16 +91,10 @@ func Test_Logger_fmt(t *testing.T) {
 	t.Run("console", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				oldExit := osExit
-				osExit = func(code int) {}
-				defer func() {
-					osExit = oldExit
-				}()
-
 				buf := bytes.Buffer{}
 				opt := optFn()
 				h := newTextHandler(&buf, &opt, dateFormat)
-				l, err := newSlogWrapper(h, nil)
+				l, err := newSlogWrapper(h, nil, &logOpt)
 				require.NoError(t, err)
 				tt.logFn(l)
 

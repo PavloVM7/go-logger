@@ -58,6 +58,8 @@ func TestLevelAbbreviations(t *testing.T) {
 		{"error", "ERR", func(l *logslog.Logger) { l.Error("test message") }},
 	}
 
+	logOpt := option{exitFunc: func(code int) {}}
+
 	t.Run("JSON handler", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -97,14 +99,8 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			jh := newJSONHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper, err := newSlogWrapper(jh, nil)
+			wrapper, err := newSlogWrapper(jh, nil, &logOpt)
 			require.NoError(t, err)
-
-			originalExit := osExit
-			osExit = func(code int) {}
-			defer func() {
-				osExit = originalExit
-			}()
 
 			wrapper.Fatalw("fatal message", "key", "value")
 
@@ -120,14 +116,8 @@ func TestLevelAbbreviations(t *testing.T) {
 			buf := bytes.Buffer{}
 			opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 			th := newTextHandler(&buf, &opt, time.RFC3339Nano)
-			wrapper, err := newSlogWrapper(th, nil)
+			wrapper, err := newSlogWrapper(th, nil, &logOpt)
 			require.NoError(t, err)
-
-			originalExit := osExit
-			osExit = func(code int) {}
-			defer func() {
-				osExit = originalExit
-			}()
 
 			wrapper.Fatalw("fatal message", "key", "value")
 
@@ -168,7 +158,7 @@ func Test_namedHandler(t *testing.T) {
 		buf := bytes.Buffer{}
 		opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 		h := newNamedJSONHandler(&buf, &opt, time.RFC3339Nano)
-		l1, err := newSlogWrapper(h, []io.Writer{&buf})
+		l1, err := newSlogWrapper(h, []io.Writer{&buf}, nil)
 		require.NoError(t, err)
 		l1.Debugw(message)
 
@@ -211,7 +201,7 @@ func Test_namedHandler(t *testing.T) {
 		buf := bytes.Buffer{}
 		opt := logslog.HandlerOptions{Level: logslog.LevelDebug}
 		h := newTextHandler(&buf, &opt, time.RFC3339Nano)
-		l1, err := newSlogWrapper(h, []io.Writer{&buf})
+		l1, err := newSlogWrapper(h, []io.Writer{&buf}, nil)
 		require.NoError(t, err)
 		l1.Debugw(message)
 

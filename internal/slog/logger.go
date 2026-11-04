@@ -13,8 +13,6 @@ import (
 	"github.com/PavloVM7/go-logger/internal"
 )
 
-var osExit = os.Exit
-
 // NewWrapper returns a new slog wrapper with JSON formatting.
 // revive:disable:unexported-return
 func NewWrapper(cfg Config) (*slogWrapper, error) {
@@ -39,15 +37,24 @@ func NewWrapper(cfg Config) (*slogWrapper, error) {
 		h = newTextHandler(writer, &opt, cfg.DateFormat).WithGroup(cfg.Name)
 	}
 
-	return newSlogWrapper(h, writers)
+	return newSlogWrapper(h, writers, nil)
 }
 
-func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error) {
+type option struct {
+	exitFunc func(code int)
+}
+
+func newSlogWrapper(h logslog.Handler, writers []io.Writer, opt *option) (*slogWrapper, error) {
 	if h == nil {
 		return nil, errors.New("a handler couldn't be nil")
 	}
 
+	if opt == nil {
+		opt = &option{exitFunc: os.Exit}
+	}
+
 	return &slogWrapper{
+		opt:       opt,
 		ctx:       context.Background(),
 		lg:        logslog.New(h),
 		writers:   writers,
@@ -56,6 +63,7 @@ func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error
 }
 
 type slogWrapper struct {
+	opt       *option
 	ctx       context.Context
 	lg        *logslog.Logger
 	writers   []io.Writer
@@ -88,7 +96,7 @@ func (l *slogWrapper) With(keysAndValues ...any) internal.Logger {
 func (l *slogWrapper) Fatalf(format string, args ...any) {
 	l.lg.Log(l.ctx, LevelFatal, fmt.Sprintf(format, args...))
 	_ = l.Close()
-	osExit(1)
+	l.opt.exitFunc(1)
 }
 func (l *slogWrapper) Errorf(format string, args ...any) {
 	l.lg.Log(l.ctx, logslog.LevelError, fmt.Sprintf(format, args...))
@@ -107,7 +115,7 @@ func (l *slogWrapper) Debugf(format string, args ...any) {
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, LevelFatal, msg, keysAndValues...)
 	_ = l.Close()
-	osExit(1)
+	l.opt.exitFunc(1)
 }
 func (l *slogWrapper) Errorw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, logslog.LevelError, msg, keysAndValues...)

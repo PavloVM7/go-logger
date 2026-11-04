@@ -293,8 +293,6 @@ func parseBuf(t *testing.T, buf *bytes.Buffer) []string {
 func readLogFile(t *testing.T, fileName string) []string {
 	t.Helper()
 
-	f := os.File{}
-	f.Close()
 	bts, err := os.ReadFile(fileName)
 	require.NoError(t, err)
 
