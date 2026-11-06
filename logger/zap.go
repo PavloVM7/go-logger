@@ -19,7 +19,6 @@ func NewLoggerZap(cfg Config) (Logger, error) {
 func newZapConfig(cfg Config) (zap.Config, error) {
 	strLevel, err := cfg.levelToString()
 	if err != nil {
-		strLevel = DebugLevel.String()
 		return zap.Config{}, fmt.Errorf("failed to parse string level: %w", err)
 	}
 	result := zap.Config{
