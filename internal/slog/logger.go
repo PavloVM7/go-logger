@@ -13,15 +13,14 @@ import (
 	"github.com/PavloVM7/go-logger/internal"
 )
 
-var osExit = os.Exit
-
-const nameKeyName = "logger"
-
 // NewWrapper returns a new slog wrapper with JSON formatting.
 // revive:disable:unexported-return
 func NewWrapper(cfg Config) (*slogWrapper, error) {
 	cfg.check()
-	opt := cfg.createHandlerOptions()
+	opt, err := cfg.createHandlerOptions()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create slog wrapper: %w", err)
+	}
 	writers, err := cfg.createWriters()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create slog wrapper: %w", err)
@@ -33,31 +32,42 @@ func NewWrapper(cfg Config) (*slogWrapper, error) {
 	var h logslog.Handler
 	encoding := internal.EncodingFromString(cfg.Encoding.String())
 	if encoding == internal.JSONEncoding {
-		h = newJSONHandler(writer, &opt, cfg.DateFormat)
+		h = newNamedJSONHandler(writer, &opt, cfg.DateFormat).WithGroup(cfg.Name)
 	} else {
-		h = newTextHandler(writer, &opt, cfg.DateFormat)
+		h = newTextHandler(writer, &opt, cfg.DateFormat).WithGroup(cfg.Name)
 	}
 
-	return newSlogWrapper(h, writers)
+	return newSlogWrapper(h, writers, nil)
 }
 
-func newSlogWrapper(h logslog.Handler, writers []io.Writer) (*slogWrapper, error) {
+type option struct {
+	exitFunc func(code int)
+}
+
+func newSlogWrapper(h logslog.Handler, writers []io.Writer, opt *option) (*slogWrapper, error) {
 	if h == nil {
 		return nil, errors.New("a handler couldn't be nil")
 	}
 
+	if opt == nil {
+		opt = &option{exitFunc: os.Exit}
+	}
+
 	return &slogWrapper{
-		ctx:     context.Background(),
-		lg:      logslog.New(h),
-		writers: writers,
+		opt:       opt,
+		ctx:       context.Background(),
+		lg:        logslog.New(h),
+		writers:   writers,
+		closeOnce: &sync.Once{},
 	}, nil
 }
 
 type slogWrapper struct {
+	opt       *option
 	ctx       context.Context
 	lg        *logslog.Logger
 	writers   []io.Writer
-	closeOnce sync.Once
+	closeOnce *sync.Once
 }
 
 func (l *slogWrapper) addWriter(w io.Writer) bool {
@@ -76,47 +86,36 @@ func (l *slogWrapper) addWriter(w io.Writer) bool {
 
 func (l *slogWrapper) With(keysAndValues ...any) internal.Logger {
 	return &slogWrapper{
-		ctx:     l.ctx,
-		lg:      l.lg.With(keysAndValues...),
-		writers: slices.Clone(l.writers),
+		ctx:       l.ctx,
+		lg:        l.lg.With(keysAndValues...),
+		writers:   l.writers,
+		closeOnce: l.closeOnce,
 	}
 }
 
 func (l *slogWrapper) Fatalf(format string, args ...any) {
 	l.lg.Log(l.ctx, LevelFatal, fmt.Sprintf(format, args...))
 	_ = l.Close()
-	osExit(1)
+	l.opt.exitFunc(1)
 }
 func (l *slogWrapper) Errorf(format string, args ...any) {
-	if !l.IsLoggingLevelError() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelError, fmt.Sprintf(format, args...))
 }
 func (l *slogWrapper) Warnf(format string, args ...any) {
-	if !l.IsLoggingLevelWarn() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelWarn, fmt.Sprintf(format, args...))
 }
 func (l *slogWrapper) Infof(format string, args ...any) {
-	if !l.IsLoggingLevelInfo() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelInfo, fmt.Sprintf(format, args...))
 }
 
 func (l *slogWrapper) Debugf(format string, args ...any) {
-	if !l.IsLoggingLevelDebug() {
-		return
-	}
 	l.lg.Log(l.ctx, logslog.LevelDebug, fmt.Sprintf(format, args...))
 }
 
 func (l *slogWrapper) Fatalw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, LevelFatal, msg, keysAndValues...)
 	_ = l.Close()
-	osExit(1)
+	l.opt.exitFunc(1)
 }
 func (l *slogWrapper) Errorw(msg string, keysAndValues ...any) {
 	l.lg.Log(l.ctx, logslog.LevelError, msg, keysAndValues...)
@@ -142,6 +141,23 @@ func (l *slogWrapper) IsLoggingLevelWarn() bool {
 }
 func (l *slogWrapper) IsLoggingLevelError() bool {
 	return l.lg.Enabled(l.ctx, logslog.LevelError)
+}
+
+func (l *slogWrapper) Named(name string) internal.Logger {
+	return &slogWrapper{
+		ctx:       l.ctx,
+		lg:        l.lg.WithGroup(name),
+		writers:   l.writers,
+		closeOnce: l.closeOnce,
+	}
+}
+
+func (l *slogWrapper) Name() string {
+	if nh, ok := l.lg.Handler().(iNamedHandler); ok {
+		return nh.Name()
+	}
+
+	return "invalid logger type: failed to convert logger type to named handler"
 }
 
 // Close closes all closable writers (excluding stdout, stderr, stdin).
@@ -187,10 +203,6 @@ func closeWriters(writers []io.Writer) {
 
 type closable interface {
 	Close() error
-}
-
-type flusher interface {
-	Flush() error
 }
 
 func closeClosable(cl closable) {

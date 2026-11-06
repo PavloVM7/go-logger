@@ -74,16 +74,6 @@ func TestEnabled(t *testing.T) {
 				func(l *slogWrapper) bool { return l.IsLoggingLevelError() },
 			},
 		},
-		{
-			level: internal.LevelKind(99),
-			trues: []loggerBoolFunc{
-				func(l *slogWrapper) bool { return l.IsLoggingLevelDebug() },
-				func(l *slogWrapper) bool { return l.IsLoggingLevelInfo() },
-				func(l *slogWrapper) bool { return l.IsLoggingLevelWarn() },
-				func(l *slogWrapper) bool { return l.IsLoggingLevelError() },
-			},
-			falses: nil,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.level.String(), func(t *testing.T) {
@@ -245,14 +235,8 @@ func TestNewWrapperJSON(t *testing.T) {
 			Outputs:    []string{internal.OutputStdout},
 			w:          &buf,
 		}
-		l, err := NewWrapper(cfg)
-		require.NoError(t, err)
-		l.Debugw(message)
-		assert.NotEmpty(t, buf.String())
-		buf.Reset()
-		assert.Empty(t, buf.String())
-		l.Infow(message)
-		assert.NotEmpty(t, buf.String())
+		_, err := NewWrapper(cfg)
+		require.Error(t, err)
 	})
 }
 
@@ -286,14 +270,8 @@ func TestNewWrapperText(t *testing.T) {
 			DateFormat: dateFormat,
 			w:          &buf,
 		}
-		l, err := NewWrapper(cfg)
-		require.NoError(t, err)
-		l.Debugw(message)
-		assert.NotEmpty(t, buf.String())
-		buf.Reset()
-		assert.Empty(t, buf.String())
-		l.Infow(message)
-		assert.NotEmpty(t, buf.String())
+		_, err := NewWrapper(cfg)
+		require.Error(t, err)
 	})
 }
 
@@ -315,8 +293,6 @@ func parseBuf(t *testing.T, buf *bytes.Buffer) []string {
 func readLogFile(t *testing.T, fileName string) []string {
 	t.Helper()
 
-	f := os.File{}
-	f.Close()
 	bts, err := os.ReadFile(fileName)
 	require.NoError(t, err)
 

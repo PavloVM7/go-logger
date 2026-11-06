@@ -5,27 +5,41 @@ import (
 	"bytes"
 	"context"
 	"io"
-	logslog "log/slog"
+	"log/slog"
+	"strings"
 	"time"
 )
 
+const (
+	nameKeyName = "logger"
+	spaceByte   = ' '
+)
+
+type iNamedHandler interface {
+	Name() string
+}
+
+func newNamedJSONHandler(w io.Writer, opt *slog.HandlerOptions, dateFormat string) *namedHandler {
+	return newNamedHandler(newJSONHandler(w, opt, dateFormat))
+}
+
 // revive:disable:cognitive-complexity
-func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string) *logslog.JSONHandler {
+func newJSONHandler(w io.Writer, opt *slog.HandlerOptions, dateFormat string) *slog.JSONHandler {
 	if len(dateFormat) == 0 {
 		dateFormat = time.RFC3339Nano
 	}
 
 	originalReplace := opt.ReplaceAttr
-	opt.ReplaceAttr = func(groups []string, a logslog.Attr) logslog.Attr {
+	opt.ReplaceAttr = func(groups []string, a slog.Attr) slog.Attr {
 		switch a.Key {
-		case logslog.TimeKey:
+		case slog.TimeKey:
 			if tm, ok := a.Value.Any().(time.Time); ok {
-				a.Value = logslog.StringValue(tm.Format(dateFormat))
+				a.Value = slog.StringValue(tm.Format(dateFormat))
 				return a
 			}
-		case logslog.LevelKey:
-			if lvl, ok := a.Value.Any().(logslog.Level); ok {
-				a.Value = logslog.StringValue(levelToShortString(lvl))
+		case slog.LevelKey:
+			if lvl, ok := a.Value.Any().(slog.Level); ok {
+				a.Value = slog.StringValue(levelToShortString(lvl))
 				return a
 			}
 		default:
@@ -36,30 +50,57 @@ func newJSONHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string)
 		return a
 	}
 
-	return logslog.NewJSONHandler(w, opt)
+	return slog.NewJSONHandler(w, opt)
 }
 
 type textHandler struct {
 	dateFormat string
-	h          logslog.Handler
+	h          slog.Handler
 	w          io.Writer
+	name       string
 }
 
-func (h *textHandler) Enabled(ctx context.Context, level logslog.Level) bool {
+func (h *textHandler) clone() *textHandler {
+	return &textHandler{
+		dateFormat: h.dateFormat,
+		h:          h.h,
+		w:          h.w,
+		name:       h.name,
+	}
+}
+
+func (h *textHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return h.h.Enabled(ctx, level)
 }
-func (h *textHandler) WithAttrs(attrs []logslog.Attr) logslog.Handler {
+func (h *textHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return h.h.WithAttrs(attrs)
 }
-func (h *textHandler) WithGroup(name string) logslog.Handler {
-	return h.h.WithGroup(name)
+func (h *textHandler) WithGroup(name string) slog.Handler {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return h
+	}
+	result := h.clone()
+	if result.name != "" {
+		name = strings.Join([]string{result.name, name}, ".")
+	}
+	result.name = name
+
+	return result
 }
-func (h *textHandler) Handle(ctx context.Context, r logslog.Record) error {
+func (h *textHandler) Handle(ctx context.Context, r slog.Record) error {
 	var buf bytes.Buffer
 	buf.WriteString(r.Time.Format(h.dateFormat))
-	buf.WriteByte(' ')
+	buf.WriteByte(spaceByte)
 	buf.WriteString(levelToShortString(r.Level))
-	buf.WriteByte(' ')
+	buf.WriteByte(spaceByte)
+
+	if h.name != "" {
+		buf.WriteString(nameKeyName)
+		buf.WriteByte('=')
+		buf.WriteString(h.name)
+		buf.WriteByte(spaceByte)
+	}
 
 	if _, err := buf.WriteTo(h.w); err != nil {
 		return err
@@ -67,21 +108,26 @@ func (h *textHandler) Handle(ctx context.Context, r logslog.Record) error {
 
 	return h.h.Handle(ctx, r)
 }
+func (h *textHandler) Name() string {
+	return h.name
+}
 
-func newTextHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string) *textHandler {
+func newTextHandler(w io.Writer, opt *slog.HandlerOptions, dateFormat string) *textHandler {
 	if len(dateFormat) == 0 {
 		dateFormat = time.RFC3339Nano
 	}
 
 	originalReplace := opt.ReplaceAttr
-	opt.ReplaceAttr = func(groups []string, a logslog.Attr) logslog.Attr {
-		if a.Key == logslog.TimeKey {
-			return logslog.Attr{}
+	opt.ReplaceAttr = func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.TimeKey {
+			return slog.Attr{}
 		}
-		if a.Key == logslog.LevelKey {
-			return logslog.Attr{}
+		if a.Key == slog.LevelKey {
+			return slog.Attr{}
 		}
-
+		if a.Key == nameKeyName {
+			return slog.Attr{}
+		}
 		if originalReplace == nil {
 			return a
 		}
@@ -89,5 +135,42 @@ func newTextHandler(w io.Writer, opt *logslog.HandlerOptions, dateFormat string)
 		return originalReplace(groups, a)
 	}
 
-	return &textHandler{h: logslog.NewTextHandler(w, opt), w: w, dateFormat: dateFormat}
+	return &textHandler{h: slog.NewTextHandler(w, opt), w: w, dateFormat: dateFormat}
+}
+
+// --- namedHandler ---
+
+type namedHandler struct {
+	slog.Handler
+	name string
+}
+
+func (nh *namedHandler) WithGroup(name string) slog.Handler {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nh
+	}
+	if nh.name != "" {
+		name = strings.Join([]string{nh.name, name}, ".")
+	}
+	return &namedHandler{
+		Handler: nh.Handler,
+		name:    name,
+	}
+}
+
+func (nh *namedHandler) Handle(ctx context.Context, r slog.Record) error {
+	if nh.name != "" {
+		r.AddAttrs(slog.String(nameKeyName, nh.name))
+	}
+
+	return nh.Handler.Handle(ctx, r)
+}
+
+func (nh *namedHandler) Name() string {
+	return nh.name
+}
+
+func newNamedHandler(handler slog.Handler) *namedHandler {
+	return &namedHandler{Handler: handler}
 }

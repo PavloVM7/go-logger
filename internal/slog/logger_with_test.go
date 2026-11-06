@@ -30,6 +30,8 @@ func Test_Logger_With(t *testing.T) {
 		return logslog.HandlerOptions{Level: logslog.LevelDebug, AddSource: false}
 	}
 
+	logOpt := option{exitFunc: func(code int) {}}
+
 	tests := []struct {
 		name   string
 		abbrev string
@@ -65,15 +67,10 @@ func Test_Logger_With(t *testing.T) {
 	t.Run("JSON handler", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				oldExit := osExit
-				osExit = func(code int) {}
-				defer func() {
-					osExit = oldExit
-				}()
 				buf := bytes.Buffer{}
 				opt := optFn()
 				h := newJSONHandler(&buf, &opt, dateFormat)
-				l, err := newSlogWrapper(h, nil)
+				l, err := newSlogWrapper(h, nil, &logOpt)
 				require.NoError(t, err)
 				tt.logFn(l)
 
@@ -112,16 +109,10 @@ func Test_Logger_With(t *testing.T) {
 
 	t.Run("text handler", func(t *testing.T) {
 		for _, tt := range tests {
-			oldExit := osExit
-			osExit = func(code int) {}
-			defer func() {
-				osExit = oldExit
-			}()
-
 			buf := bytes.Buffer{}
 			opt := optFn()
 			h := newTextHandler(&buf, &opt, dateFormat)
-			l, err := newSlogWrapper(h, nil)
+			l, err := newSlogWrapper(h, nil, &logOpt)
 			require.NoError(t, err)
 			tt.logFn(l)
 

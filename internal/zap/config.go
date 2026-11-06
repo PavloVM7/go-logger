@@ -28,11 +28,10 @@ func (c *Config) check() {
 	c.Name = name
 }
 
-func newConfig(conf Config) zap.Config {
+func newConfig(conf Config) (zap.Config, error) {
 	levelKind, err := internal.ParseLevelString(conf.Level)
 	if err != nil {
-		fmt.Printf("unknown level string '%s'", conf.Level)
-		levelKind = internal.LevelKindDebug
+		return zap.Config{}, fmt.Errorf("unknown logging level string '%s'", conf.Level)
 	}
 
 	result := zap.Config{
@@ -52,7 +51,7 @@ func newConfig(conf Config) zap.Config {
 	if len(conf.Outputs) > 0 {
 		result.OutputPaths = conf.Outputs
 	}
-	return result
+	return result, nil
 }
 
 func newEncoderConfig() zapcore.EncoderConfig {

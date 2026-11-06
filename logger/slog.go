@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"fmt"
+
 	"github.com/PavloVM7/go-logger/internal"
 	"github.com/PavloVM7/go-logger/internal/slog"
 )
@@ -21,7 +23,7 @@ func newWrapper(c slog.Config) (Logger, error) {
 func newSlogConfig(cfg Config) (slog.Config, error) {
 	stringLevel, err := cfg.levelToString()
 	if err != nil {
-		return slog.Config{}, err
+		return slog.Config{}, fmt.Errorf("failed to parse logging level string: %w", err)
 	}
 	result := slog.Config{
 		Level:      stringLevel,

@@ -60,7 +60,8 @@ func Test_Logger_fmt(t *testing.T) {
 
 	t.Run("JSON", func(t *testing.T) {
 		cfg.Encoding = internal.JSONEncoding
-		conf := newConfig(cfg)
+		conf, err := newConfig(cfg)
+		require.NoError(t, err)
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {

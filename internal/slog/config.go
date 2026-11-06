@@ -16,7 +16,8 @@ import (
 // Config holds the configuration for a slog logger.
 type Config struct {
 	internal.ConfigBase
-	w io.Writer
+	AddSource bool
+	w         io.Writer
 }
 
 // AddStdoutOutput adds stdout to the logger outputs.
@@ -56,19 +57,24 @@ func (c *Config) checkOutputs() {
 
 func (c *Config) check() {
 	c.checkOutputs()
+
+	name := strings.TrimSpace(c.Name)
+	if len(name) == 0 {
+		name = "default"
+	}
+	c.Name = name
 }
 
-func (c *Config) createHandlerOptions() logslog.HandlerOptions {
+func (c *Config) createHandlerOptions() (logslog.HandlerOptions, error) {
 	level, err := stringToLevel(c.Level)
 	if err != nil {
-		fmt.Printf("slog config error: %v", err)
-		level = logslog.LevelDebug
+		return logslog.HandlerOptions{}, fmt.Errorf("slog config error: %v", err)
 	}
 
 	return logslog.HandlerOptions{
 		Level:     level,
-		AddSource: false,
-	}
+		AddSource: c.AddSource,
+	}, nil
 }
 
 func (c *Config) createWriters() ([]io.Writer, error) {

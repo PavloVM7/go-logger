@@ -30,7 +30,7 @@ func stringToLevel(level string) (slog.Level, error) {
 	if err != nil {
 		return slog.LevelInfo, err
 	}
-	return kindLevelToSlogLevel(kind), nil
+	return kindLevelToSlogLevel(kind)
 }
 
 var slogLevels = map[internal.LevelKind]slog.Level{
@@ -42,9 +42,9 @@ var slogLevels = map[internal.LevelKind]slog.Level{
 }
 
 // ToSlogLevel converts LevelKind to slog.Level.
-func kindLevelToSlogLevel(lk internal.LevelKind) slog.Level {
+func kindLevelToSlogLevel(lk internal.LevelKind) (slog.Level, error) {
 	if sl, ok := slogLevels[lk]; ok {
-		return sl
+		return sl, nil
 	}
-	return slog.LevelInfo
+	return slog.LevelInfo, fmt.Errorf("unknown logging level: %v", lk)
 }
