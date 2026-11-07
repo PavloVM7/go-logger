@@ -5,6 +5,7 @@
   &nbsp;&nbsp;&nbsp;
   <a href="https://github.com/PavloVM7/go-logger/actions/workflows/revive.yml"><img src="https://github.com/PavloVM7/go-logger/actions/workflows/revive.yml/badge.svg" alt="Test Status"></a>
 </p>
+<a href="https://golang.org/dl/"><img src="https://img.shields.io/badge/Go-1.27.3+-00ADD8?style=flat&logo=go" alt="Go Version" style="padding:20px"></a>
 
 A structured logging library for Go that provides a unified interface over multiple logging backends (slog and zap). It supports context propagation, structured key-value logging, and multiple output destinations.
 
