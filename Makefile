@@ -29,3 +29,11 @@ lint:
 .PHONY: test
 test:
 	go test ./...
+
+.PHONY: detect-leaks
+detect-leaks:
+	gitleaks detect --verbose
+
+.PHONY: check-updates
+check-updates:
+	go list -m -u all
