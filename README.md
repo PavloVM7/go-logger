@@ -5,7 +5,7 @@
   
   <a href="https://github.com/PavloVM7/go-logger/actions/workflows/revive.yml"><img src="https://github.com/PavloVM7/go-logger/actions/workflows/revive.yml/badge.svg" alt="Test Status"></a>
   
-  <a href="https://golang.org/dl/" style="padding:20"><img src="https://img.shields.io/badge/Go-1.27.3+-00ADD8?style=flat&logo=go" alt="Go Version"></a>
+  <a href="https://golang.org/dl/" style="padding:10"><img src="https://img.shields.io/badge/Go-1.27.3+-00ADD8?style=flat&logo=go" alt="Go Version"></a>
 </p>
 
 
